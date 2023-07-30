@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import { getOutboundPieStatistics } from '@/api/outbound_order'
+// import { getOutboundPieStatistics } from '@/api/outbound_order'
 import echarts from 'echarts'
 require('echarts/theme/macarons') // echarts theme
 import resize from './mixins/resize'
@@ -52,18 +52,18 @@ export default {
     // 获取各个经销商出库金额的饼图统计信息
     get_outbound_pie_data() {
       this.listLoading = true
-      getOutboundPieStatistics().then((response) => {
-        // 然后再给饼状图赋值
-        this.dealer_names = response.data.dealer_names
-        this.dealer_price_data = response.data.data_dict
+      // getOutboundPieStatistics().then((response) => {
+      //   // 然后再给饼状图赋值
+      //   this.dealer_names = response.data.dealer_names
+      //   this.dealer_price_data = response.data.data_dict
 
-        this.$nextTick(() => {
-          this.initChart()
-        })
-        this.listLoading = false
-      }).catch(() => {
-        this.listLoading = false
-      })
+      //   this.$nextTick(() => {
+      //     this.initChart()
+      //   })
+      //   this.listLoading = false
+      // }).catch(() => {
+      //   this.listLoading = false
+      // })
     },
 
     initChart() {

@@ -2,7 +2,7 @@
  * @Author: xie.yx yxxie@gk-estor.com
  * @Date: 2022-12-05 21:09:43
  * @LastEditors: xie.yx yxxie@gk-estor.com
- * @LastEditTime: 2023-03-15 00:37:40
+ * @LastEditTime: 2023-07-22 22:28:37
  * @FilePath: /order_system_vue/src/views/permission/role.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -371,7 +371,6 @@ export default {
               type: 'success',
               duration: 2000
             })
-
             this.listLoading = false
 
             // 刷新表格数据

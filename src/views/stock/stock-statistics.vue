@@ -2,7 +2,7 @@
  * @Author: xie.yx yxxie@gk-estor.com
  * @Date: 2022-12-05 21:09:43
  * @LastEditors: xie.yx yxxie@gk-estor.com
- * @LastEditTime: 2023-06-28 11:57:30
+ * @LastEditTime: 2023-07-30 13:09:54
  * @FilePath: /vue-element-admin/src/views/tab/order.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -15,15 +15,14 @@
         <el-card :body-style="{ padding: '0px' }">
           <div style="padding: 14px;">
             <!-- 本次入库的标题 -->
-            <span style="font-size: 17px;font-weight: 800;"><i class="el-icon-document" />入库抬头：{{ domain.title }}</span>
+            <span style="font-size: 17px;font-weight: 800;"><i class="el-icon-document" />股票名称：{{ domain.stock_name }}</span>
             <el-button type="text" class="button" @click="handleDetails(domain.business_id)">查看详情<i class="el-icon-view el-icon--right" /></el-button>
             <el-button type="text" class="button" style="margin-right: 15px;" @click="handleUpdate(domain, index)">编辑<i class="el-icon-edit el-icon--right" /></el-button>
             <el-divider />
-            <div class="bottom clearfix">本次订单入库时间：{{ domain.create_time | parseTime('{y}-{m}-{d} {h}:{i}:{s}') }}</div>
-            <div class="bottom clearfix">本次订单更新时间：{{ domain.update_time | parseTime('{y}-{m}-{d} {h}:{i}:{s}') }}</div>
-            <div class="bottom clearfix">本次入库产品种类：<el-tag size="small" type="success">{{ domain.type }}</el-tag></div>
-            <div class="bottom clearfix">本次入库总数量（件）：{{ domain.total_piece }}</div>
-            <div class="bottom clearfix">本次入库总金额（元）：{{ domain.total_price }}</div>
+            <div class="bottom clearfix">最新操作时间：{{ domain.update_time | parseTime('{y}-{m}-{d} {h}:{i}:{s}') }}</div>
+            <div class="bottom clearfix">交易次数：{{ domain.transaction_count }}</div>
+            <div class="bottom clearfix">总买入额：<el-tag type="success">{{ domain.buy_price_count }}</el-tag></div>
+            <div class="bottom clearfix">总卖出额：<el-tag type="danger">{{ domain.sell_price_count }}</el-tag></div>
             <div class="bottom clearfix">备注：{{ domain.remarks }}</div>
             <el-button size="small" class="filter-item bottom clearfix" type="danger" icon="el-icon-delete" @click="handleDelete(domain, index)">删除</el-button>
           </div>
@@ -32,7 +31,7 @@
     </el-row>
 
     <!-- 查看详情页面弹出框 -->
-    <el-dialog :title="textMap[dialogStatus]" width="80%" :visible.sync="viewDetail">
+    <el-dialog :title="textMap[dialogStatus]" width="70%" :visible.sync="viewDetail">
       <el-table
         v-loading="listLoading"
         :data="currentProduct"
@@ -96,71 +95,93 @@
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getData" />
 
     <!-- 添加 按钮弹出框 -->
-    <el-dialog :title="textMap[dialogStatus]" width="60%" :visible.sync="dialogFormVisible" @close="cancelAddOrder">
+    <el-dialog :title="textMap[dialogStatus]" width="80%" :visible.sync="dialogFormVisible" @close="cancelAddOrder">
       <el-form ref="dataForm" :rules="rules" :model="dynamicValidateForm" label-width="120px" label-position="right">
-        <el-form-item prop="title" label="入库单标题：">
-          <el-input v-model.trim="dynamicValidateForm.title" />
+        <el-form-item prop="stock_name" label="股票名称：">
+          <el-input v-model.trim="dynamicValidateForm.stock_name" />
         </el-form-item>
 
-        <el-form-item v-if="dialogStatus == 'update'" label-width="120px" prop="create_time" label="入库时间：">
-          <el-date-picker v-model.trim="dynamicValidateForm.create_time" type="datetime" value-format="timestamp" placeholder="选择日期时间" />
+        <el-form-item prop="stock_code" label="股票代码：">
+          <el-input v-model.trim="dynamicValidateForm.stock_code" />
         </el-form-item>
 
-        <el-form-item label="入库产品列表：" prop="product_list">
+        <el-form-item label="股票交易列表：" prop="stock_transaction_list">
           <el-table
             v-loading="detailsListLoading"
-            :data="savePurchaseProduct"
+            :data="saveStockTransaction"
             border
             style="width: 100%"
           >
-            <el-table-column label="产品名称" prod="product_name" min-width="200px">
+            <el-table-column label="交易类型" prod="transaction_type">
               <template slot-scope="{row}">
-                <span>{{ row.product_name }} </span>
-                <el-tag>{{ row.scent_type }}</el-tag>
-                <el-tag type="success">{{ row.specifications }} ML</el-tag>
+                <el-tag v-if="row.transaction_type === '买入'" type="success">{{ row.transaction_type }}</el-tag>
+                <el-tag v-if="row.transaction_type === '卖出'" type="danger">{{ row.transaction_type }}</el-tag>
               </template>
             </el-table-column>
 
-            <el-table-column label="每件规格（瓶）" prod="specification_of_piece">
+            <el-table-column label="买入价格" prod="buy_price">
               <template slot-scope="{row}">
-                <span>{{ row.specification_of_piece }} </span>
+                <span>{{ row.buy_price }} </span>
               </template>
             </el-table-column>
 
-            <el-table-column label="单价（元/瓶）" prod="unit_price">
+            <el-table-column label="卖出价格" prod="sell_price">
               <template slot-scope="{row}">
-                <span>{{ row.unit_price }} </span>
+                <span>{{ row.sell_price }} </span>
               </template>
             </el-table-column>
 
-            <el-table-column label="小计（元）" prod="subtotal_price">
+            <el-table-column label="数量" prod="quantity">
+              <template slot-scope="{row}">
+                <span>{{ row.quantity }} </span>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="小计买入价格" prod="subtotal_price">
               <template slot-scope="{row}">
                 <span>{{ row.subtotal_price }} </span>
               </template>
             </el-table-column>
 
-            <el-table-column label="数量（件）" prod="quantity">
-              <template slot-scope="{row, $index}">
-                <el-input v-model.trim="row.quantity" :value="row.quantity" placeholder="输入数量（件）" @change="calTotalChangePrice(row, $index)" />
+            <el-table-column label="小计卖出价格" prod="subtotal_price">
+              <template slot-scope="{row}">
+                <span>{{ row.subtotal_price }} </span>
               </template>
             </el-table-column>
 
-            <el-table-column label="缩略图" prop="thumb_img" width="110px" align="center">
+            <el-table-column label="卖出档位1" prod="sell_gear_one">
               <template slot-scope="{row}">
-                <el-popover
-                  placement="right"
-                  title=""
-                  trigger="click"
-                >
-                  <img :src="row.img_url" style="max-height: 600px; max-width: 600px">
-                  <img slot="reference" :src="row.thumb_img_url" :alt="row.thumb_img_url" style="max-height: 35px; max-width: 110px">
-                </el-popover>
+                <span>{{ row.sell_gear_one }} </span>
               </template>
             </el-table-column>
 
-            <el-table-column label="备注" prop="remarks" align="center">
+            <el-table-column label="卖出档位2" prod="sell_gear_two">
               <template slot-scope="{row}">
-                <span>{{ row.remarks }}</span>
+                <span>{{ row.sell_gear_two }} </span>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="加仓价格" prod="markup_price">
+              <template slot-scope="{row}">
+                <span>{{ row.markup_price }} </span>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="重仓价格" prod="heavy_price">
+              <template slot-scope="{row}">
+                <span>{{ row.heavy_price }} </span>
+              </template>
+            </el-table-column>
+
+            <el-table-column label="交易时间" width="250px" prod="update_time">
+              <template slot-scope="{row}">
+                <el-date-picker v-model.trim="row.update_time" type="date" value-format="timestamp" placeholder="选择日期时间" />
+              </template>
+            </el-table-column>
+
+            <el-table-column label="备注" prop="remarks" width="130px" align="center">
+              <template slot-scope="{row}">
+                <el-input v-model.trim="row.remarks" :value="row.remarks" placeholder="输入备注信息" />
               </template>
             </el-table-column>
 
@@ -172,99 +193,87 @@
               </template>
             </el-table-column>
           </el-table>
-          <el-button type="primary" @click="addPurchaseProduct">点击添加入库产品</el-button>
+          <el-button type="primary" @click="addStockTransactionList">点击添加股票交易信息</el-button>
         </el-form-item>
 
-        <el-form-item label="合计（元）：" prop="total_price">
+        <!-- <el-form-item label="合计（元）：" prop="total_price">
           <el-input-number v-model.trim="dynamicValidateForm.total_price" disabled :controls="true" :precision="2" />
-        </el-form-item>
-
-        <el-form-item label="合计（件）：" prop="total_piece">
-          <el-input-number v-model.trim="dynamicValidateForm.total_piece" disabled :controls="true" />
-        </el-form-item>
+        </el-form-item> -->
 
         <el-form-item label="备注" prop="remarks">
-          <el-input v-model.trim="dynamicValidateForm.remarks" :autosize="{ minRows: 2, maxRows: 2}" type="textarea" placeholder="输入该次入库的备注信息" />
+          <el-input v-model.trim="dynamicValidateForm.remarks" :autosize="{ minRows: 2, maxRows: 2}" type="textarea" placeholder="输入该次交易的备注信息" />
         </el-form-item>
       </el-form>
 
-      <!-- 内嵌产品搜索 dialog -->
+      <!-- 点击添加股票交易列表 dialog -->
       <el-dialog
-        width="70%"
-        title="添加需要入库的产品"
+        width="60%"
+        title="添加所选股票的交易信息"
         :visible.sync="innerVisible"
         append-to-body
       >
-        <el-input v-model.trim="productListQuery.title" prefix-icon="el-icon-search" placeholder="请输入产品名称" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
-        <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">搜索</el-button>
+        <!-- <el-divider /> -->
+        <el-form ref="dataFormTransaction" :rules="rules" :model="dynamicStockListForm" label-width="120px" label-position="right">
+          <el-form-item label="交易类型：" prop="transaction_type">
+            <el-select v-model.trim="dynamicStockListForm.transaction_type" placeholder="请选择交易类型" clearable class="filter-item">
+              <el-option v-for="item in transactionTypeOptions" :key="item.id" :label="item.transaction_type" :value="item.transaction_type" />
+            </el-select>
+          </el-form-item>
 
-        <el-divider />
-        <el-table
-          v-loading="embeddedListLoading"
-          :data="productList"
-          border
-          style="width: 100%"
-        >
-          <el-table-column label="产品名称" prod="product_name" min-width="150px">
-            <template slot-scope="{row}">
-              <span>{{ row.product_name }}</span>
-              <el-tag>{{ row.scent_type }}</el-tag>
-              <el-tag type="success">{{ row.specifications }} ML</el-tag>
-            </template>
-          </el-table-column>
+          <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="买入价格：" prop="buy_price">
+            <el-input-number v-model.trim="dynamicStockListForm.buy_price" :controls="true" :precision="2" />
+          </el-form-item>
 
-          <el-table-column label="每件规格（瓶）" prod="specification_of_piece">
-            <template slot-scope="{row}">
-              <span>{{ row.specification_of_piece }} </span>
-            </template>
-          </el-table-column>
+          <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="买入数量：" prop="quantity">
+            <el-input-number v-model.trim="dynamicStockListForm.quantity" placeholder="输入买入数量" :controls="true" @change="calTotalChangePrice(dynamicStockListForm)" />
+          </el-form-item>
 
-          <el-table-column label="单价（元/瓶）" prod="unit_price">
-            <template slot-scope="{row}">
-              <span>{{ row.unit_price }} </span>
-            </template>
-          </el-table-column>
+          <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="小计买入价格：" prop="subtotal_price">
+            <el-input-number v-model.trim="dynamicStockListForm.subtotal_price" disabled :controls="true" />
+          </el-form-item>
 
-          <el-table-column label="缩略图" sortable prop="thumb_img" width="110px" align="center">
-            <template slot-scope="{row}">
-              <el-popover
-                placement="right"
-                title=""
-                trigger="click"
-              >
-                <img :src="row.img_url" style="max-height: 600px; max-width: 600px">
-                <img slot="reference" :src="row.thumb_img_url" :alt="row.thumb_img_url" style="max-height: 35px; max-width: 110px">
-              </el-popover>
-            </template>
-          </el-table-column>
+          <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="卖出档位1（10%）：" prop="sell_gear_one">
+            <el-input-number v-model.trim="dynamicStockListForm.sell_gear_one" disabled :controls="true" />
+          </el-form-item>
 
-          <el-table-column label="备注" prop="remarks" width="110px" align="center">
-            <template slot-scope="{row}">
-              <el-input v-model.trim="row.remarks" :value="row.remarks" placeholder="输入备注信息" />
-            </template>
-          </el-table-column>
+          <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="卖出档位2（20%）：" prop="sell_gear_two">
+            <el-input-number v-model.trim="dynamicStockListForm.sell_gear_two" disabled :controls="true" />
+          </el-form-item>
 
-          <el-table-column label="小计（元）" prod="subtotal_price">
-            <template slot-scope="{row}">
-              <span>{{ row.subtotal_price }} </span>
-            </template>
-          </el-table-column>
+          <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="加仓价格（10%）：" prop="markup_price">
+            <el-input-number v-model.trim="dynamicStockListForm.markup_price" disabled :controls="true" />
+          </el-form-item>
 
-          <el-table-column label="数量（件）" min-width="210px" prod="quantity">
-            <template slot-scope="{row, $index}">
-              <el-input-number v-model.trim="row.quantity" :value="row.quantity" :controls="true" controls-position="right" size="medium" placeholder="请输入产品数量" @change="calProductPrice(row, $index)" />
-            </template>
-          </el-table-column>
-        </el-table>
+          <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="重仓价格（20%）：" prop="heavy_price">
+            <el-input-number v-model.trim="dynamicStockListForm.heavy_price" disabled :controls="true" />
+          </el-form-item>
 
-        <!-- 内嵌的页面控制 -->
-        <pagination v-show="productTotal>0" :total="productTotal" :page.sync="productListQuery.page" :limit.sync="productListQuery.limit" @pagination="handleFilter" />
+          <el-form-item v-if="dynamicStockListForm.transaction_type == '卖出'" label="卖出价格：" prop="sell_price">
+            <el-input-number v-model.trim="dynamicStockListForm.sell_price" :controls="true" :precision="2" />
+          </el-form-item>
+
+          <el-form-item v-if="dynamicStockListForm.transaction_type == '卖出'" label="卖出数量：" prop="quantity">
+            <el-input-number v-model.trim="dynamicStockListForm.quantity" :controls="true" />
+          </el-form-item>
+
+          <!-- <el-form-item v-if="dynamicStockListForm.transaction_type == '卖出'" label="盈利数额：" prop="profit_amount">
+            <el-input-number v-model.trim="dynamicStockListForm.profit_amount" :controls="true" />
+          </el-form-item> -->
+
+          <el-form-item label-width="120px" prop="update_time" label="交易时间：">
+            <el-date-picker v-model.trim="dynamicStockListForm.update_time" type="date" value-format="timestamp" placeholder="选择日期时间" />
+          </el-form-item>
+
+          <el-form-item label="备注" prop="remarks">
+            <el-input v-model.trim="dynamicStockListForm.remarks" :autosize="{ minRows: 2, maxRows: 2}" type="textarea" placeholder="输入该次入库的备注信息" />
+          </el-form-item>
+        </el-form>
 
         <div slot="footer" class="dialog-footer">
           <el-button @click="innerVisible = false">
             取消
           </el-button>
-          <el-button type="primary" @click="addProduct">
+          <el-button type="primary" @click="addStockTransaction">
             确认
           </el-button>
         </div>
@@ -283,8 +292,8 @@
 </template>
 
 <script>
-import { addPurchaseOrder, updatePurchaseOrder, getPurchaseOrder, getPurchaseProductDetails, delPurchaseOrder } from '@/api/purchase_order'
-import { searchProduct } from '@/api/product'
+import { addStockList, getStockInfoById, updatePurchaseOrder, getStockList, getPurchaseProductDetails, delPurchaseOrder } from '@/api/stock'
+// import { searchProduct } from '@/api/product'
 import waves from '@/directive/waves' // waves directive
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
@@ -312,25 +321,24 @@ export default {
     return {
       // 点击查看详情的产品表格的加载圈圈
       detailsListLoading: true,
-      // 内嵌搜索加载圈圈
-      embeddedListLoading: true,
       cardListLoading: true,
       listLoading: true,
+      transactionTypeOptions: [{
+        id: 12345,
+        transaction_type: '买入'
+      }, {
+        id: 54321,
+        transaction_type: '卖出'
+      }],
       // 动态表单的提交内容
       dynamicValidateForm: {
-        title: this.getTime() + '日入库',
-        domains: [{
-          product_name: ''
-        }],
-        total_piece: 0,
-        total_price: 0
+        stock_name: ''
       },
-      // 临时保存入库订单的产品
-      savePurchaseProduct: [],
+      dynamicStockListForm: {},
       // 外面的入库订单总量
-      total: 0,
+      total: 0.0,
       // 内嵌产品列表的总量
-      productTotal: 0,
+      productTotal: 0.0,
       listQuery: {
         page: 1,
         limit: 10
@@ -340,8 +348,10 @@ export default {
         page: 1,
         limit: 10
       },
-      // 存放所有的产品信息
-      productList: [],
+      // 存放所有的交易信息
+      transactionList: [],
+      // 保存临时交易信息
+      saveStockTransaction: [],
       // 详情页的当前入库产品列表
       currentProduct: [],
       statusOptions: ['老白干香型', '浓香型', '清香型', '酱香型', '其他香型'],
@@ -405,71 +415,107 @@ export default {
       this.dynamicValidateForm = {}
     },
 
-    // 点击添加入库产品按钮
-    addPurchaseProduct() {
+    // 点击添加股票交易信息弹框
+    addStockTransactionList() {
       this.innerVisible = true
-      this.embeddedListLoading = true
 
-      // 获取所有产品
-      searchProduct(this.productListQuery).then(response => {
-        // 用临时变量暂时保存检索的产品
-        const temp_productList = response.data.data
-        // 将临时保存的产品的数量弄到搜索框里面去
-        this.savePurchaseProduct.forEach(element1 => {
-          temp_productList.forEach((element2, index) => {
-            if (element1.product_name === element2.product_name && element1.scent_type === element2.scent_type && element1.specifications === element2.specifications) {
-              temp_productList[index].quantity = element1.quantity
-              if (temp_productList[index].quantity !== undefined) {
-                let subtotal_price = 0
-                subtotal_price = temp_productList[index].specification_of_piece * temp_productList[index].unit_price * temp_productList[index].quantity
-                if (subtotal_price >= 0) {
-                  temp_productList[index].subtotal_price = parseFloat(subtotal_price).toFixed(2)
-                } else {
-                  temp_productList[index].subtotal_price = undefined
-                }
-              } else {
-                temp_productList[index].subtotal_price = undefined
-              }
-            }
-          })
-        })
-        // 覆盖临时变量
-        this.productList = temp_productList
-        this.productTotal = response.data.count
-        this.embeddedListLoading = false
-      }).catch(() => {
-        this.embeddedListLoading = false
+      // 清空表单
+      this.$nextTick(() => {
+        this.$refs['dataFormTransaction'].clearValidate()
       })
+      this.dynamicStockListForm = {}
+      this.$delete(this.dynamicStockListForm, 'transaction_time')
+      this.$set(this.dynamicStockListForm, 'transaction_time', new Date().getTime())
+      // this.embeddedListLoading = true
+      // // 获取所有产品
+      // searchProduct(this.productListQuery).then(response => {
+      //   // 用临时变量暂时保存检索的产品
+      //   const temp_productList = response.data.data
+      //   // 将临时保存的产品的数量弄到搜索框里面去
+      //   this.savePurchaseProduct.forEach(element1 => {
+      //     temp_productList.forEach((element2, index) => {
+      //       if (element1.product_name === element2.product_name && element1.scent_type === element2.scent_type && element1.specifications === element2.specifications) {
+      //         temp_productList[index].quantity = element1.quantity
+      //         if (temp_productList[index].quantity !== undefined) {
+      //           let subtotal_price = 0
+      //           subtotal_price = temp_productList[index].specification_of_piece * temp_productList[index].unit_price * temp_productList[index].quantity
+      //           if (subtotal_price >= 0) {
+      //             temp_productList[index].subtotal_price = parseFloat(subtotal_price).toFixed(2)
+      //           } else {
+      //             temp_productList[index].subtotal_price = undefined
+      //           }
+      //         } else {
+      //           temp_productList[index].subtotal_price = undefined
+      //         }
+      //       }
+      //     })
+      //   })
+      //   // 覆盖临时变量
+      //   this.productList = temp_productList
+      //   this.productTotal = response.data.count
+      //   this.embeddedListLoading = false
+      // }).catch(() => {
+      //   this.embeddedListLoading = false
+      // })
     },
 
     // 搜索功能
     handleFilter() {
       this.embeddedListLoading = true
-      searchProduct(this.productListQuery).then(response => {
-        this.productList = response.data.data
-        this.productTotal = response.data.count
-        this.embeddedListLoading = false
-      }).catch(() => {
-        this.embeddedListLoading = false
-      })
+      // searchProduct(this.productListQuery).then(response => {
+      //   this.productList = response.data.data
+      //   this.productTotal = response.data.count
+      //   this.embeddedListLoading = false
+      // }).catch(() => {
+      //   this.embeddedListLoading = false
+      // })
     },
 
-    // 更改数量之后立马更新 行内的 小计金额 和 外面的总计金额 和 总计件数
-    calTotalChangePrice(row, index) {
-      if (row.quantity !== undefined) {
-        let subtotal_price = 0
-        subtotal_price = row.specification_of_piece * row.unit_price * row.quantity
-        if (subtotal_price >= 0) {
-          // 页面更新数据，得先删除这个属性，再进行赋值
-          this.$delete(this.savePurchaseProduct[index], 'subtotal_price')
-          this.$set(this.savePurchaseProduct[index], 'subtotal_price', subtotal_price)
-        } else {
-          // 页面更新数据，得先删除这个属性，再进行赋值
-          this.$delete(this.savePurchaseProduct[index], 'subtotal_price')
-          this.$set(this.savePurchaseProduct[index], 'subtotal_price', undefined)
+    // （用于内嵌的添加交易列表的表单价格计算）更改数量之后立马更新 行内的 小计金额 和 外面的总计金额 和 总计件数
+    calTotalChangePrice(element_obj) {
+      if (element_obj.transaction_type === '买入') {
+        const buy_price = parseFloat(element_obj.buy_price).toFixed(2)
+
+        if (element_obj.quantity !== undefined) {
+          const subtotal_price = parseFloat(buy_price * element_obj.quantity).toFixed(2) // 买入的价格小计
+          if (subtotal_price >= 0) {
+            // 页面更新数据，得先删除这个属性，再进行赋值
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', subtotal_price)
+
+            // 卖出档位1、卖出档位2、加仓价格、重仓价格
+            const sell_gear_one_price = parseFloat(buy_price * 1.1).toFixed(2)
+            this.$delete(this.dynamicStockListForm, 'sell_gear_one')
+            this.$set(this.dynamicStockListForm, 'sell_gear_one', sell_gear_one_price)
+            const sell_gear_two_price = parseFloat(buy_price * 1.2).toFixed(2)
+            this.$delete(this.dynamicStockListForm, 'sell_gear_two')
+            this.$set(this.dynamicStockListForm, 'sell_gear_two', sell_gear_two_price)
+            const markup_price = parseFloat(buy_price * 0.9).toFixed(2)
+            this.$delete(this.dynamicStockListForm, 'markup_price')
+            this.$set(this.dynamicStockListForm, 'markup_price', markup_price)
+            const heavy_price = parseFloat(buy_price * 0.8).toFixed(2)
+            this.$delete(this.dynamicStockListForm, 'heavy_price')
+            this.$set(this.dynamicStockListForm, 'heavy_price', heavy_price)
+          } else {
+            // 页面更新数据，得先删除这个属性，再进行赋值
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', undefined)
+          }
+        }
+      } else {
+        const sell_price = parseFloat(element_obj.buy_price).toFixed(2)
+        if (element_obj.quantity !== undefined) {
+          const subtotal_price = parseFloat(sell_price * element_obj.quantity).toFixed(2) // 卖出的价格小计
+          if (subtotal_price >= 0) {
+            // 页面更新数据，得先删除这个属性，再进行赋值
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', subtotal_price)
+          } else {
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', undefined)
+          }
         }
       }
-      this.calPiecePrice()
     },
 
     // 计算小计的价格（单价 x 每件多少瓶 x 多少件）
@@ -512,19 +558,15 @@ export default {
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
-
-      // 页面更新数据，得先删除这个属性，再进行赋值
-      this.$delete(this.dynamicValidateForm, 'title')
-      this.$set(this.dynamicValidateForm, 'title', this.getTime() + '日入库')
     },
 
     // 更新入库单卡片数据
     handleUpdate(domain, index) {
       this.detailsListLoading = true
       const params = {
-        'purchase_order_id': domain.business_id
+        'stock_id': domain.business_id
       }
-      getPurchaseProductDetails(params).then((response) => {
+      getStockInfoById(params).then((response) => {
         this.savePurchaseProduct = response.data.data
         // 更新价格
         this.calPiecePrice()
@@ -631,57 +673,26 @@ export default {
     },
 
     // 添加产品到本次入库订单的产品列表
-    addProduct() {
-      this.dynamicValidateForm.domains = []
-      // 如果已存在一模一样的，就直接覆盖
-      this.productList.forEach(element => {
-        let is_same = false
-
-        this.savePurchaseProduct.forEach((element1, index) => {
-          if (element1.product_name === element.product_name && element1.scent_type === element.scent_type && element1.specifications === element.specifications) {
-            // 一样的就将数量进行覆盖
-            this.savePurchaseProduct[index].quantity = element.quantity
-            // 数量覆盖之后，行内价格也要进行覆盖
-            const subtotal_price = element.specification_of_piece * element.unit_price * element.quantity
-            this.savePurchaseProduct[index].subtotal_price = subtotal_price
-
-            is_same = true
-            return false // 跳出此次循环
-          }
-        })
-        if (is_same === false) {
-          this.savePurchaseProduct.push(element)
-        }
-      })
-
-      // 删除数量为0的产品列表
-      const remove_zero_outbound_product = this.savePurchaseProduct.filter(item => item.quantity !== 0 && item.quantity !== undefined)
-      this.savePurchaseProduct = remove_zero_outbound_product
-
+    addStockTransaction() {
+      this.dynamicValidateForm.stock_transaction_list = []
       // 调用计算 总计金额 和 总计数量 的函数
-      this.calPiecePrice()
+      // this.calPiecePrice()
       // 将临时保存的订单产品列表放入 domains 里面
-      this.dynamicValidateForm.domains = this.savePurchaseProduct
+      this.saveStockTransaction.push(this.dynamicStockListForm)
       this.innerVisible = false
     },
 
-    // 添加入库单数据
+    // 添加此股票的交易
     addData() {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
-          const deleteZeroProduct = []
-          this.savePurchaseProduct.forEach(element => {
-            if (element.quantity !== 0) {
-              deleteZeroProduct.push(element)
-            }
-          })
-          this.dynamicValidateForm.domains = deleteZeroProduct
+          this.dynamicValidateForm.stock_transaction_list = this.saveStockTransaction
 
           this.listLoading = true
           // 发送到后台，添加该次入库单
-          addPurchaseOrder(this.dynamicValidateForm).then((response) => {
+          addStockList(this.dynamicValidateForm).then((response) => {
             this.$notify({
-              title: '新增入库单',
+              title: '新增股票交易列表',
               message: '新增成功！',
               type: 'success',
               duration: 2000
@@ -705,13 +716,7 @@ export default {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           this.listLoading = true
-          const deleteZeroProduct = []
-          this.savePurchaseProduct.forEach(element => {
-            if (element.quantity !== 0) {
-              deleteZeroProduct.push(element)
-            }
-          })
-          this.dynamicValidateForm.domains = deleteZeroProduct
+          this.dynamicValidateForm.stock_transaction_list = this.saveStockTransaction
 
           // 发送到后台，添加该次出库单
           updatePurchaseOrder(this.dynamicValidateForm).then((response) => {
@@ -735,11 +740,11 @@ export default {
       })
     },
 
-    // 获取入库单数据
+    // 获取股票交易列表卡片
     getData() {
       this.cardListLoading = true
       // 发送到后台，添加该次入库单
-      getPurchaseOrder(this.listQuery).then((response) => {
+      getStockList(this.listQuery).then((response) => {
         this.temp = response.data.data
         this.total = response.data.count
         this.cardListLoading = false

@@ -85,8 +85,8 @@
 </template>
 
 <script>
-import { getTotalPurchasePriceAndPiece, getPurchasePriceStatistics, getPurchasePieceStatistics } from '@/api/purchase_order'
-import { getTotalOutboundPriceAndPiece, getOutboundPriceStatistics, getOutboundPieceStatistics } from '@/api/outbound_order'
+// import { getTotalPurchasePriceAndPiece, getPurchasePriceStatistics, getPurchasePieceStatistics } from '@/api/purchase_order'
+// import { getTotalOutboundPriceAndPiece, getOutboundPriceStatistics, getOutboundPieceStatistics } from '@/api/outbound_order'
 import PanelGroup from './components/PanelGroup'
 import LineChart from './components/LineChart'
 import PieChart from './components/PieChart'
@@ -156,27 +156,27 @@ export default {
     checkPermission,
     // 获取入库单和出库单的总金额和总数量
     getTotalPurchaseOutbound() {
-      this.purchaseLoading = true
-      // 入库单总金额统计
-      getTotalPurchasePriceAndPiece().then((response) => {
-        const data = response.data
-        this.purchase_order_total_price = data.total_price
-        this.purchase_order_total_piece = data.total_piece
-        this.purchaseLoading = false
-      }).catch(() => {
-        this.purchaseLoading = false
-      })
+      // this.purchaseLoading = true
+      // // 入库单总金额统计
+      // getTotalPurchasePriceAndPiece().then((response) => {
+      //   const data = response.data
+      //   this.purchase_order_total_price = data.total_price
+      //   this.purchase_order_total_piece = data.total_piece
+      //   this.purchaseLoading = false
+      // }).catch(() => {
+      //   this.purchaseLoading = false
+      // })
 
-      this.outboundLoading = true
-      // 出库单总金额统计
-      getTotalOutboundPriceAndPiece().then((response) => {
-        const data = response.data
-        this.outbound_order_total_price = data.total_price
-        this.outbound_order_total_piece = data.total_piece
-        this.outboundLoading = false
-      }).catch(() => {
-        this.outboundLoading = false
-      })
+      // this.outboundLoading = true
+      // // 出库单总金额统计
+      // getTotalOutboundPriceAndPiece().then((response) => {
+      //   const data = response.data
+      //   this.outbound_order_total_price = data.total_price
+      //   this.outbound_order_total_piece = data.total_piece
+      //   this.outboundLoading = false
+      // }).catch(() => {
+      //   this.outboundLoading = false
+      // })
     },
 
     // 获取 4 个统计图的数据信息
@@ -188,50 +188,50 @@ export default {
     // 获取入库单金额和时间的统计数据
     getPurchaseStatistic() {
       this.listLoading = true
-      getPurchasePriceStatistics().then((response) => {
-        const _dict = {
-          'data': response.data.y,
-          'date_time': response.data.x,
-          'switch_name': '金额（元）',
-          'title': '入库金额统计（元）：'
-        }
-        choiceStatistic.purchase_price = _dict
-        this.lineChartData = _dict
-        this.listLoading = false
-      }).catch(() => {
-        this.listLoading = false
-      })
-      getPurchasePieceStatistics().then((response) => {
-        const _dict = {
-          'data': response.data.y,
-          'date_time': response.data.x,
-          'switch_name': '数量（件）',
-          'title': '入库数量统计（件）：'
-        }
-        choiceStatistic.purchase_piece = _dict
-      })
+      // getPurchasePriceStatistics().then((response) => {
+      //   const _dict = {
+      //     'data': response.data.y,
+      //     'date_time': response.data.x,
+      //     'switch_name': '金额（元）',
+      //     'title': '入库金额统计（元）：'
+      //   }
+      //   choiceStatistic.purchase_price = _dict
+      //   this.lineChartData = _dict
+      //   this.listLoading = false
+      // }).catch(() => {
+      //   this.listLoading = false
+      // })
+      // getPurchasePieceStatistics().then((response) => {
+      //   const _dict = {
+      //     'data': response.data.y,
+      //     'date_time': response.data.x,
+      //     'switch_name': '数量（件）',
+      //     'title': '入库数量统计（件）：'
+      //   }
+      //   choiceStatistic.purchase_piece = _dict
+      // })
     },
 
     // 获取出库单金额和时间的统计数据
     getOutboundStatistic() {
-      getOutboundPriceStatistics().then((response) => {
-        const _dict = {
-          'data': response.data.y,
-          'date_time': response.data.x,
-          'switch_name': '金额（元）',
-          'title': '出库金额统计（元）：'
-        }
-        choiceStatistic.outbound_price = _dict
-      })
-      getOutboundPieceStatistics().then((response) => {
-        const _dict = {
-          'data': response.data.y,
-          'date_time': response.data.x,
-          'switch_name': '数量（瓶）',
-          'title': '出库数量统计（瓶）：'
-        }
-        choiceStatistic.outbound_piece = _dict
-      })
+      // getOutboundPriceStatistics().then((response) => {
+      //   const _dict = {
+      //     'data': response.data.y,
+      //     'date_time': response.data.x,
+      //     'switch_name': '金额（元）',
+      //     'title': '出库金额统计（元）：'
+      //   }
+      //   choiceStatistic.outbound_price = _dict
+      // })
+      // getOutboundPieceStatistics().then((response) => {
+      //   const _dict = {
+      //     'data': response.data.y,
+      //     'date_time': response.data.x,
+      //     'switch_name': '数量（瓶）',
+      //     'title': '出库数量统计（瓶）：'
+      //   }
+      //   choiceStatistic.outbound_piece = _dict
+      // })
     },
 
     // 点击按钮 切换统计图

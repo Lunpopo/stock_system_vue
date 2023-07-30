@@ -2,7 +2,7 @@
  * @Author: lunpopo lunpopo.personal@gmail.com
  * @Date: 2022-12-05 21:09:43
  * @LastEditors: xie.yx yxxie@gk-estor.com
- * @LastEditTime: 2023-03-22 21:38:17
+ * @LastEditTime: 2023-07-22 22:34:55
  * @FilePath: /vue-element-admin/src/utils/request.js
  * @Description: axios请求拦截器
  */
