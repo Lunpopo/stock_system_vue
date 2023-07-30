@@ -8,6 +8,42 @@
  */
 import request from '@/utils/request'
 
+// 获取股票统计信息列表
+export function getStockList(query) {
+  return request({
+    url: '/purchase_order/get_stock_list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 新增股票交易信息列表
+export function addStockList(data) {
+  return request({
+    url: '/purchase_order/add_stock_list',
+    method: 'post',
+    data
+  })
+}
+
+// 新增股票交易信息列表
+export function updateStockList(data) {
+  return request({
+    url: '/purchase_order/update_stock_list',
+    method: 'post',
+    data
+  })
+}
+
+// 根据 stock id 获取股票交易信息
+export function getStockInfoById(data) {
+  return request({
+    url: '/purchase_order/get_stock_info_by_id',
+    method: 'post',
+    data
+  })
+}
+
 // 获取入库单金额统计信息
 export function getPurchasePriceStatistics(query) {
   return request({
@@ -32,33 +68,6 @@ export function getTotalPurchasePriceAndPiece(query) {
     url: '/order_statistics/get_total_purchase_price_and_piece',
     method: 'get',
     params: query
-  })
-}
-
-// 获取股票统计信息列表
-export function getStockList(query) {
-  return request({
-    url: '/purchase_order/get_stock_list',
-    method: 'get',
-    params: query
-  })
-}
-
-// 新增股票交易信息列表
-export function addStockList(data) {
-  return request({
-    url: '/purchase_order/add_stock_list',
-    method: 'post',
-    data
-  })
-}
-
-// 根据 stock id 获取股票交易信息
-export function getStockInfoById(data) {
-  return request({
-    url: '/purchase_order/get_stock_info',
-    method: 'post',
-    data
   })
 }
 

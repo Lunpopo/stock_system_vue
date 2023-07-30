@@ -8,7 +8,7 @@
 -->
 <template>
   <div class="app-container">
-    <el-button class="filter-item" type="primary" icon="el-icon-edit" @click="handleCreate">添加入库单</el-button>
+    <el-button class="filter-item" type="primary" icon="el-icon-edit" @click="handleCreate">添加股票交易列表</el-button>
 
     <el-row v-loading="cardListLoading">
       <el-col v-for="(domain, index) in temp" :key="domain.id" :xs="22" :sm="22" :lg="10" :offset="1" style="margin-top: 20px">
@@ -253,7 +253,11 @@
           </el-form-item>
 
           <el-form-item v-if="dynamicStockListForm.transaction_type == '卖出'" label="卖出数量：" prop="quantity">
-            <el-input-number v-model.trim="dynamicStockListForm.quantity" :controls="true" />
+            <el-input-number v-model.trim="dynamicStockListForm.quantity" :controls="true" @change="calTotalChangePrice(dynamicStockListForm)" />
+          </el-form-item>
+
+          <el-form-item v-if="dynamicStockListForm.transaction_type == '卖出'" label="小计卖出价格：" prop="subtotal_price">
+            <el-input-number v-model.trim="dynamicStockListForm.subtotal_price" disabled :controls="true" />
           </el-form-item>
 
           <!-- <el-form-item v-if="dynamicStockListForm.transaction_type == '卖出'" label="盈利数额：" prop="profit_amount">
@@ -292,7 +296,7 @@
 </template>
 
 <script>
-import { addStockList, getStockInfoById, updatePurchaseOrder, getStockList, getPurchaseProductDetails, delPurchaseOrder } from '@/api/stock'
+import { addStockList, getStockInfoById, updateStockList, getStockList, getPurchaseProductDetails, delPurchaseOrder } from '@/api/stock'
 // import { searchProduct } from '@/api/product'
 import waves from '@/directive/waves' // waves directive
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -395,7 +399,7 @@ export default {
   },
 
   methods: {
-    // 获取当前日期的函数：2023-2-14
+    // 获取当前日期的函数：2023-2-14 DONE
     getTime() {
       const yy = new Date().getFullYear()
       const mm = new Date().getMonth() + 1
@@ -415,7 +419,7 @@ export default {
       this.dynamicValidateForm = {}
     },
 
-    // 点击添加股票交易信息弹框
+    // 点击添加股票交易信息弹框 DONE
     addStockTransactionList() {
       this.innerVisible = true
 
@@ -424,54 +428,14 @@ export default {
         this.$refs['dataFormTransaction'].clearValidate()
       })
       this.dynamicStockListForm = {}
-      this.$delete(this.dynamicStockListForm, 'transaction_time')
-      this.$set(this.dynamicStockListForm, 'transaction_time', new Date().getTime())
-      // this.embeddedListLoading = true
-      // // 获取所有产品
-      // searchProduct(this.productListQuery).then(response => {
-      //   // 用临时变量暂时保存检索的产品
-      //   const temp_productList = response.data.data
-      //   // 将临时保存的产品的数量弄到搜索框里面去
-      //   this.savePurchaseProduct.forEach(element1 => {
-      //     temp_productList.forEach((element2, index) => {
-      //       if (element1.product_name === element2.product_name && element1.scent_type === element2.scent_type && element1.specifications === element2.specifications) {
-      //         temp_productList[index].quantity = element1.quantity
-      //         if (temp_productList[index].quantity !== undefined) {
-      //           let subtotal_price = 0
-      //           subtotal_price = temp_productList[index].specification_of_piece * temp_productList[index].unit_price * temp_productList[index].quantity
-      //           if (subtotal_price >= 0) {
-      //             temp_productList[index].subtotal_price = parseFloat(subtotal_price).toFixed(2)
-      //           } else {
-      //             temp_productList[index].subtotal_price = undefined
-      //           }
-      //         } else {
-      //           temp_productList[index].subtotal_price = undefined
-      //         }
-      //       }
-      //     })
-      //   })
-      //   // 覆盖临时变量
-      //   this.productList = temp_productList
-      //   this.productTotal = response.data.count
-      //   this.embeddedListLoading = false
-      // }).catch(() => {
-      //   this.embeddedListLoading = false
-      // })
+      const current_time = new Date().getTime()
+      this.$delete(this.dynamicStockListForm, 'update_time')
+      this.$set(this.dynamicStockListForm, 'update_time', current_time)
+      this.$delete(this.dynamicStockListForm, 'create_time')
+      this.$set(this.dynamicStockListForm, 'create_time', current_time)
     },
 
-    // 搜索功能
-    handleFilter() {
-      this.embeddedListLoading = true
-      // searchProduct(this.productListQuery).then(response => {
-      //   this.productList = response.data.data
-      //   this.productTotal = response.data.count
-      //   this.embeddedListLoading = false
-      // }).catch(() => {
-      //   this.embeddedListLoading = false
-      // })
-    },
-
-    // （用于内嵌的添加交易列表的表单价格计算）更改数量之后立马更新 行内的 小计金额 和 外面的总计金额 和 总计件数
+    // （用于内嵌的添加交易列表的表单价格计算）更改数量之后立马更新 行内的 小计金额 和 外面的总计金额 和 总计件数 DONE
     calTotalChangePrice(element_obj) {
       if (element_obj.transaction_type === '买入') {
         const buy_price = parseFloat(element_obj.buy_price).toFixed(2)
@@ -503,7 +467,7 @@ export default {
           }
         }
       } else {
-        const sell_price = parseFloat(element_obj.buy_price).toFixed(2)
+        const sell_price = parseFloat(element_obj.sell_price).toFixed(2)
         if (element_obj.quantity !== undefined) {
           const subtotal_price = parseFloat(sell_price * element_obj.quantity).toFixed(2) // 卖出的价格小计
           if (subtotal_price >= 0) {
@@ -518,37 +482,6 @@ export default {
       }
     },
 
-    // 计算小计的价格（单价 x 每件多少瓶 x 多少件）
-    calPiecePrice() {
-      let total_price = 0.0 // 总金额
-      let total_piece = 0 // 总数量
-      this.savePurchaseProduct.forEach(element => {
-        total_price = total_price + Number(element.subtotal_price)
-        total_piece = total_piece + Number(element.quantity)
-      })
-      this.dynamicValidateForm.total_price = total_price
-      this.dynamicValidateForm.total_piece = total_piece
-    },
-
-    // 计算内嵌dialog内的产品的小计（元）
-    calProductPrice(row, index) {
-      if (row.quantity !== undefined) {
-        let subtotal_price = 0
-        subtotal_price = row.specification_of_piece * row.unit_price * row.quantity
-        if (subtotal_price >= 0) {
-          // 页面更新数据，得先删除这个属性，再进行赋值
-          this.$delete(this.productList[index], 'subtotal_price')
-          this.$set(this.productList[index], 'subtotal_price', parseFloat(subtotal_price).toFixed(2))
-        } else {
-          this.$delete(this.productList[index], 'subtotal_price')
-          this.$set(this.productList[index], 'subtotal_price', undefined)
-        }
-      } else {
-        this.$delete(this.productList[index], 'subtotal_price')
-        this.$set(this.productList[index], 'subtotal_price', undefined)
-      }
-    },
-
     // 点击 添加按钮 添加入库单
     handleCreate() {
       // 增加一个时间戳，用来前端更新弹出层用的
@@ -560,44 +493,39 @@ export default {
       })
     },
 
-    // 更新入库单卡片数据
+    // 更新入库单卡片数据 DONE
     handleUpdate(domain, index) {
+      this.dialogFormVisible = true
+      this.dialogStatus = 'update'
+      this.$nextTick(() => {
+        this.$refs['dataForm'].clearValidate()
+      })
+
       this.detailsListLoading = true
       const params = {
         'stock_id': domain.business_id
       }
       getStockInfoById(params).then((response) => {
-        this.savePurchaseProduct = response.data.data
-        // 更新价格
-        this.calPiecePrice()
+        const stock_obj = response.data.stock_obj
+        const transaction_obj_list = response.data.transaction_obj_list
+
+        // 股票名
+        this.$delete(this.dynamicValidateForm, 'stock_name')
+        this.$set(this.dynamicValidateForm, 'stock_name', stock_obj.stock_name)
+        // 股票 code
+        this.$delete(this.dynamicValidateForm, 'stock_code')
+        this.$set(this.dynamicValidateForm, 'stock_code', stock_obj.stock_code)
+        // 备注
+        this.$delete(this.dynamicValidateForm, 'remarks')
+        this.$set(this.dynamicValidateForm, 'remarks', stock_obj.remarks)
+        // 业务id
+        this.$delete(this.dynamicValidateForm, 'business_id')
+        this.$set(this.dynamicValidateForm, 'business_id', stock_obj.business_id)
+        // 交易列表
+        this.saveStockTransaction = transaction_obj_list
         this.detailsListLoading = false
       }).catch(() => {
         this.detailsListLoading = false
-      })
-
-      // 标题
-      // 页面更新数据，得先删除这个属性，再进行赋值
-      this.$delete(this.dynamicValidateForm, 'title')
-      this.$set(this.dynamicValidateForm, 'title', this.temp[index].title)
-      // 将内嵌的搜索框也要加进去
-      this.$delete(this.productListQuery, 'dealer_name')
-      this.$set(this.productListQuery, 'dealer_name', this.temp[index].belong_to)
-
-      // 备注
-      this.$delete(this.dynamicValidateForm, 'remarks')
-      this.$set(this.dynamicValidateForm, 'remarks', this.temp[index].remarks)
-      // 订单id
-      this.$delete(this.dynamicValidateForm, 'business_id')
-      this.$set(this.dynamicValidateForm, 'business_id', this.temp[index].business_id)
-
-      // 订单的创建时间
-      this.$delete(this.dynamicValidateForm, 'create_time')
-      this.$set(this.dynamicValidateForm, 'create_time', parseInt(this.temp[index].create_time) * 1000)
-
-      this.dialogStatus = 'update'
-      this.dialogFormVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
       })
     },
 
@@ -678,6 +606,7 @@ export default {
       // 调用计算 总计金额 和 总计数量 的函数
       // this.calPiecePrice()
       // 将临时保存的订单产品列表放入 domains 里面
+      this.dynamicStockListForm.stock_id = this.dynamicValidateForm.business_id
       this.saveStockTransaction.push(this.dynamicStockListForm)
       this.innerVisible = false
     },
@@ -693,7 +622,7 @@ export default {
           addStockList(this.dynamicValidateForm).then((response) => {
             this.$notify({
               title: '新增股票交易列表',
-              message: '新增成功！',
+              message: 'response.msg',
               type: 'success',
               duration: 2000
             })
@@ -719,7 +648,7 @@ export default {
           this.dynamicValidateForm.stock_transaction_list = this.saveStockTransaction
 
           // 发送到后台，添加该次出库单
-          updatePurchaseOrder(this.dynamicValidateForm).then((response) => {
+          updateStockList(this.dynamicValidateForm).then((response) => {
             this.$notify({
               title: '更新入库单',
               message: response.msg,
