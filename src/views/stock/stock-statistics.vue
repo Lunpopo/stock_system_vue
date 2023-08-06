@@ -2,7 +2,7 @@
  * @Author: xie.yx yxxie@gk-estor.com
  * @Date: 2022-12-05 21:09:43
  * @LastEditors: xie.yx yxxie@gk-estor.com
- * @LastEditTime: 2023-07-30 13:09:54
+ * @LastEditTime: 2023-08-03 09:58:42
  * @FilePath: /vue-element-admin/src/views/tab/order.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -31,63 +31,104 @@
     </el-row>
 
     <!-- 查看详情页面弹出框 -->
-    <el-dialog :title="textMap[dialogStatus]" width="70%" :visible.sync="viewDetail">
+    <el-dialog :title="textMap[dialogStatus]" width="80%" :visible.sync="viewDetail">
       <el-table
         v-loading="listLoading"
-        :data="currentProduct"
+        :data="currentTransactionList"
         border
         style="width: 100%"
       >
-        <el-table-column label="产品名称" prod="product_name" min-width="150px">
+        <el-table-column label="交易类型" prod="transaction_type">
           <template slot-scope="{row}">
-            <span>{{ row.product_name }} </span>
-            <el-tag>{{ row.scent_type }}</el-tag>
-            <el-tag type="success">{{ row.specifications }} ML</el-tag>
+            <el-tag v-if="row.transaction_type === '买入'" type="success">{{ row.transaction_type }}</el-tag>
+            <el-tag v-if="row.transaction_type === '卖出'" type="danger">{{ row.transaction_type }}</el-tag>
           </template>
         </el-table-column>
 
-        <el-table-column label="数量（件）" prod="quantity">
+        <el-table-column label="买入价格" prod="buy_price">
+          <template slot-scope="{row}">
+            <span>{{ row.buy_price }} </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="卖出价格" prod="sell_price">
+          <template slot-scope="{row}">
+            <span>{{ row.sell_price }} </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="数量" prod="quantity">
           <template slot-scope="{row}">
             <span>{{ row.quantity }} </span>
           </template>
         </el-table-column>
 
-        <el-table-column label="每件规格（瓶）" prod="specification_of_piece">
-          <template slot-scope="{row}">
-            <span>{{ row.specification_of_piece }} </span>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="单价（元/瓶）" prod="unit_price">
-          <template slot-scope="{row}">
-            <span>{{ row.unit_price }} </span>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="小计（元）" prod="subtotal_price">
+        <el-table-column label="小计买入价格" prod="subtotal_price">
           <template slot-scope="{row}">
             <span>{{ row.subtotal_price }} </span>
           </template>
         </el-table-column>
 
-        <el-table-column label="缩略图" prop="thumb_img" width="110px" align="center">
+        <el-table-column label="小计卖出价格" prod="subtotal_price">
           <template slot-scope="{row}">
-            <el-popover
-              placement="right"
-              title=""
-              trigger="click"
-            >
-              <img :src="row.img_url" style="max-height: 600px; max-width: 600px">
-              <img slot="reference" :src="row.thumb_img_url" :alt="row.thumb_img_url" style="max-height: 35px; max-width: 110px">
-            </el-popover>
+            <span>{{ row.subtotal_price }} </span>
           </template>
         </el-table-column>
 
-        <el-table-column label="备注" prop="remarks" width="110px" align="center">
+        <el-table-column label="卖出档位1" prod="sell_gear_one">
+          <template slot-scope="{row}">
+            <span>{{ row.sell_gear_one }} </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="卖出档位2" prod="sell_gear_two">
+          <template slot-scope="{row}">
+            <span>{{ row.sell_gear_two }} </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="加仓价格" prod="markup_price">
+          <template slot-scope="{row}">
+            <span>{{ row.markup_price }} </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="重仓价格" prod="heavy_price">
+          <template slot-scope="{row}">
+            <span>{{ row.heavy_price }} </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="交易时间" width="120px" prod="update_time">
+          <template slot-scope="{row}">
+            <span>{{ row.update_time | parseTime('{y}-{m}-{d}') }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="剩余仓位" prod="remain_positions">
+          <template slot-scope="{row}">
+            <span>{{ row.remain_positions }} </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="盈利数额" prod="profit_amount">
+          <template slot-scope="{row}">
+            <span>{{ row.profit_amount }} </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="交易状态" prod="transaction_status">
+          <template slot-scope="{row}">
+            <span>{{ row.transaction_status }} </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="备注" prop="remarks" width="130px" align="center">
           <template slot-scope="{row}">
             <span>{{ row.remarks }}</span>
           </template>
         </el-table-column>
+
       </el-table>
     </el-dialog>
 
@@ -296,8 +337,7 @@
 </template>
 
 <script>
-import { addStockList, getStockInfoById, updateStockList, getStockList, getPurchaseProductDetails, delPurchaseOrder } from '@/api/stock'
-// import { searchProduct } from '@/api/product'
+import { addStockList, getStockInfoById, getStockTransactionById, updateStockList, getStockList, delPurchaseOrder } from '@/api/stock'
 import waves from '@/directive/waves' // waves directive
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
@@ -334,6 +374,8 @@ export default {
         id: 54321,
         transaction_type: '卖出'
       }],
+      // 存放详细交易信息的
+      currentTransactionList: [],
       // 动态表单的提交内容
       dynamicValidateForm: {
         stock_name: ''
@@ -482,7 +524,7 @@ export default {
       }
     },
 
-    // 点击 添加按钮 添加入库单
+    // 点击 添加按钮 添加股票交易信息
     handleCreate() {
       // 增加一个时间戳，用来前端更新弹出层用的
       this.dialogStatus = 'create'
@@ -490,6 +532,7 @@ export default {
       this.detailsListLoading = false
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
+        this.$refs['dataFormTransaction'].clearValidate()
       })
     },
 
@@ -529,18 +572,21 @@ export default {
       })
     },
 
-    // 点击查看详情
+    // 点击查看详情 DONE
     handleDetails(business_id) {
       this.dialogStatus = 'detail'
       this.viewDetail = true
       const params = {
-        'purchase_order_id': business_id
+        'stock_id': business_id
       }
       this.listLoading = true
-      getPurchaseProductDetails(params).then((response) => {
-        this.currentProduct = response.data.data
+
+      getStockTransactionById(params).then((response) => {
+        this.currentTransactionList = response.data.data
+        this.detailsListLoading = false
         this.listLoading = false
       }).catch(() => {
+        this.detailsListLoading = false
         this.listLoading = false
       })
     },
