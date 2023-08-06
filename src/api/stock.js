@@ -53,6 +53,15 @@ export function getStockTransactionById(data) {
   })
 }
 
+// 通过 stock id 删除该股票及其交易信息
+export function delStock(data) {
+  return request({
+    url: '/purchase_order/del_stock',
+    method: 'post',
+    data
+  })
+}
+
 // 获取入库单金额统计信息
 export function getPurchasePriceStatistics(query) {
   return request({
@@ -95,14 +104,5 @@ export function getPurchaseProductDetails(query) {
     url: '/purchase_order/get_purchase_product_details',
     method: 'get',
     params: query
-  })
-}
-
-// 通过入库单id删除该次进货订单
-export function delPurchaseOrder(data) {
-  return request({
-    url: '/purchase_order/del_purchase_order',
-    method: 'post',
-    data
   })
 }

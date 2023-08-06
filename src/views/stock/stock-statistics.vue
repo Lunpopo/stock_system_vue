@@ -99,9 +99,15 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="交易时间" width="120px" prod="update_time">
+        <el-table-column label="交易时间" width="120px" prod="create_time">
           <template slot-scope="{row}">
-            <span>{{ row.update_time | parseTime('{y}-{m}-{d}') }}</span>
+            <span>{{ row.create_time | parseTime('{y}-{m}-{d}') }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="成本价" prod="cost">
+          <template slot-scope="{row}">
+            <span>{{ row.cost }} </span>
           </template>
         </el-table-column>
 
@@ -119,7 +125,8 @@
 
         <el-table-column label="交易状态" prod="transaction_status">
           <template slot-scope="{row}">
-            <span>{{ row.transaction_status }} </span>
+            <span v-if="row.transaction_status === '未清仓'"><el-tag> {{ row.transaction_status }} </el-tag></span>
+            <span v-if="row.transaction_status === '已清仓'"><el-tag type="success"> {{ row.transaction_status }} </el-tag></span>
           </template>
         </el-table-column>
 
@@ -214,9 +221,9 @@
               </template>
             </el-table-column>
 
-            <el-table-column label="交易时间" width="250px" prod="update_time">
+            <el-table-column label="交易时间" width="250px" prod="create_time">
               <template slot-scope="{row}">
-                <el-date-picker v-model.trim="row.update_time" type="date" value-format="timestamp" placeholder="选择日期时间" />
+                <el-date-picker v-model.trim="row.create_time" type="date" value-format="timestamp" placeholder="选择日期时间" />
               </template>
             </el-table-column>
 
@@ -305,8 +312,8 @@
             <el-input-number v-model.trim="dynamicStockListForm.profit_amount" :controls="true" />
           </el-form-item> -->
 
-          <el-form-item label-width="120px" prop="update_time" label="交易时间：">
-            <el-date-picker v-model.trim="dynamicStockListForm.update_time" type="date" value-format="timestamp" placeholder="选择日期时间" />
+          <el-form-item label-width="120px" prop="create_time" label="交易时间：">
+            <el-date-picker v-model.trim="dynamicStockListForm.create_time" type="date" value-format="timestamp" placeholder="选择日期时间" />
           </el-form-item>
 
           <el-form-item label="备注" prop="remarks">
@@ -337,7 +344,7 @@
 </template>
 
 <script>
-import { addStockList, getStockInfoById, getStockTransactionById, updateStockList, getStockList, delPurchaseOrder } from '@/api/stock'
+import { addStockList, getStockInfoById, getStockTransactionById, updateStockList, getStockList, delStock } from '@/api/stock'
 import waves from '@/directive/waves' // waves directive
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
 
@@ -532,7 +539,7 @@ export default {
       this.detailsListLoading = false
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
-        this.$refs['dataFormTransaction'].clearValidate()
+        this.$refs['dynamicStockListForm'].clearValidate()
       })
     },
 
@@ -594,22 +601,22 @@ export default {
     // 点击删除按钮
     handleDelete(obj, index) {
       const business_id = obj.business_id
-      const title = obj.title
+      const stock_name = obj.stock_name
 
-      this.$confirm('是否确认删除此次入库数据？', '提示', {
+      this.$confirm('是否确认删除该股票及其交易信息？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
         const params = {
-          'purchase_order_id': business_id
+          'stock_id': business_id
         }
         this.listLoading = true
         // 根据 business_id 删除此条入库数据
-        delPurchaseOrder(params).then((response) => {
+        delStock(params).then((response) => {
           this.$notify({
-            title: '删除入库单：' + title,
-            message: '删除成功！',
+            title: '删除股票：' + stock_name,
+            message: response.msg,
             type: 'success',
             duration: 2000
           })
@@ -668,7 +675,7 @@ export default {
           addStockList(this.dynamicValidateForm).then((response) => {
             this.$notify({
               title: '新增股票交易列表',
-              message: 'response.msg',
+              message: response.msg,
               type: 'success',
               duration: 2000
             })
