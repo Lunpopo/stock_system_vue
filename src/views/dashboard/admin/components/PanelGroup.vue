@@ -7,7 +7,7 @@
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            入库金额统计
+            总盈利金额统计
           </div>
           <div class="card-panel-text">
             （元）
@@ -23,7 +23,7 @@
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            入库数量统计
+            总交易数量统计
           </div>
           <div class="card-panel-text">
             （件）
@@ -39,7 +39,7 @@
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            出库金额统计
+            总买入金额统计
           </div>
           <div class="card-panel-text">
             （元）
@@ -55,7 +55,7 @@
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            出库数量统计
+            总卖出金额统计
           </div>
           <div class="card-panel-text">
             （瓶）

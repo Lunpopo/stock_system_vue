@@ -1,7 +1,7 @@
 {
   "name": "order-system-vue",
   "version": "1.0.0",
-  "description": "订单系统-vue前端",
+  "description": "股票统计系统-vue前端",
   "author": "Lunpopo <lunpopo.personal@gmail.com>",
   "scripts": {
     "dev": "vue-cli-service serve",

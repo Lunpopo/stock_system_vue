@@ -2,7 +2,7 @@
  * @Author: xie.yx yxxie@gk-estor.com
  * @Date: 2022-12-05 21:09:43
  * @LastEditors: xie.yx yxxie@gk-estor.com
- * @LastEditTime: 2023-08-03 09:58:42
+ * @LastEditTime: 2023-08-11 11:10:44
  * @FilePath: /vue-element-admin/src/views/tab/order.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -14,15 +14,21 @@
       <el-col v-for="(domain, index) in temp" :key="domain.id" :xs="22" :sm="22" :lg="10" :offset="1" style="margin-top: 20px">
         <el-card :body-style="{ padding: '0px' }">
           <div style="padding: 14px;">
-            <!-- 本次入库的标题 -->
             <span style="font-size: 17px;font-weight: 800;"><i class="el-icon-document" />股票名称：{{ domain.stock_name }}</span>
             <el-button type="text" class="button" @click="handleDetails(domain.business_id)">查看详情<i class="el-icon-view el-icon--right" /></el-button>
             <el-button type="text" class="button" style="margin-right: 15px;" @click="handleUpdate(domain, index)">编辑<i class="el-icon-edit el-icon--right" /></el-button>
             <el-divider />
             <div class="bottom clearfix">最新操作时间：{{ domain.update_time | parseTime('{y}-{m}-{d} {h}:{i}:{s}') }}</div>
             <div class="bottom clearfix">交易次数：{{ domain.transaction_count }}</div>
-            <div class="bottom clearfix">总买入额：<el-tag type="success">{{ domain.buy_price_count }}</el-tag></div>
-            <div class="bottom clearfix">总卖出额：<el-tag type="danger">{{ domain.sell_price_count }}</el-tag></div>
+            <div class="bottom clearfix">是否已清仓：
+              <el-tag v-if="domain.is_cleared == '已清仓'" type="success">{{ domain.is_cleared }}</el-tag>
+              <el-tag v-if="domain.is_cleared == '未清仓'" type="warning">{{ domain.is_cleared }}</el-tag>
+            </div>
+            <div class="bottom clearfix">最新成本价：<el-tag>{{ domain.latest_cost }}</el-tag></div>
+            <div class="bottom clearfix">总盈利额：
+              <el-tag v-if="domain.total_profit_amount >= 0" type="success">{{ domain.total_profit_amount }}</el-tag>
+              <el-tag v-if="domain.total_profit_amount < 0" type="danger">{{ domain.total_profit_amount }}</el-tag>
+            </div>
             <div class="bottom clearfix">备注：{{ domain.remarks }}</div>
             <el-button size="small" class="filter-item bottom clearfix" type="danger" icon="el-icon-delete" @click="handleDelete(domain, index)">删除</el-button>
           </div>
@@ -37,6 +43,7 @@
         :data="currentTransactionList"
         border
         style="width: 100%"
+        :row-class-name="tableRowClassName"
       >
         <el-table-column label="交易类型" prod="transaction_type">
           <template slot-scope="{row}">
@@ -120,6 +127,12 @@
         <el-table-column label="盈利数额" prod="profit_amount">
           <template slot-scope="{row}">
             <span>{{ row.profit_amount }} </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="分红" prod="dividend_amount">
+          <template slot-scope="{row}">
+            <span>{{ row.dividend_amount }} </span>
           </template>
         </el-table-column>
 
@@ -245,7 +258,7 @@
         </el-form-item>
 
         <!-- <el-form-item label="合计（元）：" prop="total_price">
-          <el-input-number v-model.trim="dynamicValidateForm.total_price" disabled :controls="true" :precision="2" />
+          <el-input-number v-model.trim="dynamicValidateForm.total_price" disabled :controls="true" :precision="3" />
         </el-form-item> -->
 
         <el-form-item label="备注" prop="remarks">
@@ -261,15 +274,21 @@
         append-to-body
       >
         <!-- <el-divider /> -->
-        <el-form ref="dataFormTransaction" :rules="rules" :model="dynamicStockListForm" label-width="120px" label-position="right">
+        <el-form ref="dataFormTransaction" :rules="rules" :model="dynamicStockListForm" label-width="150px" label-position="right">
           <el-form-item label="交易类型：" prop="transaction_type">
             <el-select v-model.trim="dynamicStockListForm.transaction_type" placeholder="请选择交易类型" clearable class="filter-item">
               <el-option v-for="item in transactionTypeOptions" :key="item.id" :label="item.transaction_type" :value="item.transaction_type" />
             </el-select>
           </el-form-item>
 
+          <el-form-item label="产品的类型：" prop="product_type">
+            <el-select v-model.trim="dynamicStockListForm.product_type" placeholder="请选择产品的类型" clearable class="filter-item">
+              <el-option v-for="item in productTypeOptions" :key="item.id" :label="item.product_type" :value="item.product_type" />
+            </el-select>
+          </el-form-item>
+
           <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="买入价格：" prop="buy_price">
-            <el-input-number v-model.trim="dynamicStockListForm.buy_price" :controls="true" :precision="2" />
+            <el-input-number v-model.trim="dynamicStockListForm.buy_price" :controls="true" :precision="3" />
           </el-form-item>
 
           <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="买入数量：" prop="quantity">
@@ -277,27 +296,27 @@
           </el-form-item>
 
           <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="小计买入价格：" prop="subtotal_price">
-            <el-input-number v-model.trim="dynamicStockListForm.subtotal_price" disabled :controls="true" />
+            <el-input-number v-model.trim="dynamicStockListForm.subtotal_price" :controls="true" @change="calUnitPrice(dynamicStockListForm)" />
           </el-form-item>
 
           <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="卖出档位1（10%）：" prop="sell_gear_one">
-            <el-input-number v-model.trim="dynamicStockListForm.sell_gear_one" disabled :controls="true" />
+            <el-input-number v-model.trim="dynamicStockListForm.sell_gear_one" :controls="true" />
           </el-form-item>
 
           <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="卖出档位2（20%）：" prop="sell_gear_two">
-            <el-input-number v-model.trim="dynamicStockListForm.sell_gear_two" disabled :controls="true" />
+            <el-input-number v-model.trim="dynamicStockListForm.sell_gear_two" :controls="true" />
           </el-form-item>
 
           <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="加仓价格（10%）：" prop="markup_price">
-            <el-input-number v-model.trim="dynamicStockListForm.markup_price" disabled :controls="true" />
+            <el-input-number v-model.trim="dynamicStockListForm.markup_price" :controls="true" />
           </el-form-item>
 
           <el-form-item v-if="dynamicStockListForm.transaction_type == '买入'" label="重仓价格（20%）：" prop="heavy_price">
-            <el-input-number v-model.trim="dynamicStockListForm.heavy_price" disabled :controls="true" />
+            <el-input-number v-model.trim="dynamicStockListForm.heavy_price" :controls="true" />
           </el-form-item>
 
           <el-form-item v-if="dynamicStockListForm.transaction_type == '卖出'" label="卖出价格：" prop="sell_price">
-            <el-input-number v-model.trim="dynamicStockListForm.sell_price" :controls="true" :precision="2" />
+            <el-input-number v-model.trim="dynamicStockListForm.sell_price" :controls="true" :precision="3" />
           </el-form-item>
 
           <el-form-item v-if="dynamicStockListForm.transaction_type == '卖出'" label="卖出数量：" prop="quantity">
@@ -305,19 +324,19 @@
           </el-form-item>
 
           <el-form-item v-if="dynamicStockListForm.transaction_type == '卖出'" label="小计卖出价格：" prop="subtotal_price">
-            <el-input-number v-model.trim="dynamicStockListForm.subtotal_price" disabled :controls="true" />
+            <el-input-number v-model.trim="dynamicStockListForm.subtotal_price" :controls="true" @change="calUnitPrice(dynamicStockListForm)" />
           </el-form-item>
 
-          <!-- <el-form-item v-if="dynamicStockListForm.transaction_type == '卖出'" label="盈利数额：" prop="profit_amount">
-            <el-input-number v-model.trim="dynamicStockListForm.profit_amount" :controls="true" />
-          </el-form-item> -->
+          <el-form-item v-if="dynamicStockListForm.transaction_type == '卖出'" label="分红金额：" prop="dividend_amount">
+            <el-input-number v-model.trim="dynamicStockListForm.dividend_amount" :controls="true" @change="calDividendAmount(dynamicStockListForm)" />
+          </el-form-item>
 
-          <el-form-item label-width="120px" prop="create_time" label="交易时间：">
+          <el-form-item prop="create_time" label="交易时间：">
             <el-date-picker v-model.trim="dynamicStockListForm.create_time" type="date" value-format="timestamp" placeholder="选择日期时间" />
           </el-form-item>
 
           <el-form-item label="备注" prop="remarks">
-            <el-input v-model.trim="dynamicStockListForm.remarks" :autosize="{ minRows: 2, maxRows: 2}" type="textarea" placeholder="输入该次入库的备注信息" />
+            <el-input v-model.trim="dynamicStockListForm.remarks" :autosize="{ minRows: 2, maxRows: 2}" type="textarea" placeholder="输入该股票的备注信息" />
           </el-form-item>
         </el-form>
 
@@ -381,15 +400,24 @@ export default {
         id: 54321,
         transaction_type: '卖出'
       }],
+      productTypeOptions: [{
+        id: 12345,
+        product_type: '股票'
+      }, {
+        id: 54321,
+        product_type: '基金'
+      }],
+      // 存放临时的分红数额变量
+      temp_dividend_amount: 0,
       // 存放详细交易信息的
       currentTransactionList: [],
       // 动态表单的提交内容
       dynamicValidateForm: {
         stock_name: ''
       },
-      dynamicStockListForm: {},
-      // 外面的入库订单总量
-      total: 0.0,
+      dynamicStockListForm: {
+        product_type: '股票'
+      },
       // 内嵌产品列表的总量
       productTotal: 0.0,
       listQuery: {
@@ -405,13 +433,10 @@ export default {
       transactionList: [],
       // 保存临时交易信息
       saveStockTransaction: [],
-      // 详情页的当前入库产品列表
-      currentProduct: [],
-      statusOptions: ['老白干香型', '浓香型', '清香型', '酱香型', '其他香型'],
       // 是否展示隐藏列
       showReviewer: false,
       temp: {},
-      // 是否展示添加入库单弹出框
+      // 是否展示添加股票交易信息弹出框
       dialogFormVisible: false,
       // 是否打开内嵌的搜索产品 dialog
       innerVisible: false,
@@ -420,9 +445,9 @@ export default {
       // 弹出层的状态，例如是 create 或者是 update
       dialogStatus: '',
       textMap: {
-        detail: '本次入库详情信息',
-        update: '更新本次入库信息',
-        create: '添加本次入库单产品'
+        detail: '股票及其交易详情信息',
+        update: '更新股票及其交易信息',
+        create: '添加股票及其交易信息'
       },
       // 表单验证规则
       rules: {
@@ -448,6 +473,19 @@ export default {
   },
 
   methods: {
+    tableRowClassName({ row, rowIndex }) {
+      // if (rowIndex === 1) {
+      //   return 'warning-row'
+      // } else if (rowIndex === 3) {
+      //   return 'success-row'
+      // }
+      if (row.remain_positions === 0) {
+        return 'success-row'
+      } else {
+        return ''
+      }
+    },
+
     // 获取当前日期的函数：2023-2-14 DONE
     getTime() {
       const yy = new Date().getFullYear()
@@ -468,7 +506,7 @@ export default {
       this.dynamicValidateForm = {}
     },
 
-    // 点击添加股票交易信息弹框 DONE
+    // 点击添加股票交易信息弹框
     addStockTransactionList() {
       this.innerVisible = true
 
@@ -476,7 +514,9 @@ export default {
       this.$nextTick(() => {
         this.$refs['dataFormTransaction'].clearValidate()
       })
-      this.dynamicStockListForm = {}
+      this.dynamicStockListForm = { product_type: '股票' }
+      // 重置分红数额的临时变量
+      this.temp_dividend_amount = 0
       const current_time = new Date().getTime()
       this.$delete(this.dynamicStockListForm, 'update_time')
       this.$set(this.dynamicStockListForm, 'update_time', current_time)
@@ -484,29 +524,73 @@ export default {
       this.$set(this.dynamicStockListForm, 'create_time', current_time)
     },
 
-    // （用于内嵌的添加交易列表的表单价格计算）更改数量之后立马更新 行内的 小计金额 和 外面的总计金额 和 总计件数 DONE
-    calTotalChangePrice(element_obj) {
-      if (element_obj.transaction_type === '买入') {
-        const buy_price = parseFloat(element_obj.buy_price).toFixed(2)
+    calDividendAmount(element_obj) {
+      // 计算分红之后的总金额
+      if (element_obj.subtotal_price !== undefined && element_obj.subtotal_price !== null && element_obj.subtotal_price !== '' && element_obj.subtotal_price !== 0) {
+        let subtotal_price = Number(element_obj.subtotal_price) // 总金额
+        const dividend_amount = Number(element_obj.dividend_amount) // 分红金额
+        const quantity = Number(element_obj.quantity) // 卖出数量
 
-        if (element_obj.quantity !== undefined) {
-          const subtotal_price = parseFloat(buy_price * element_obj.quantity).toFixed(2) // 买入的价格小计
-          if (subtotal_price >= 0) {
-            // 页面更新数据，得先删除这个属性，再进行赋值
+        if (this.temp_dividend_amount !== undefined && this.temp_dividend_amount !== null) {
+          // 将总金额和单价复原回去
+          subtotal_price = subtotal_price - Number(this.temp_dividend_amount)
+        }
+
+        const actual_subtotal_price = Number(parseFloat(subtotal_price + dividend_amount).toFixed(3)) // 实际总金额
+        const actual_sell_price = Number(parseFloat(actual_subtotal_price / quantity).toFixed(3))
+
+        this.$delete(this.dynamicStockListForm, 'sell_price')
+        this.$set(this.dynamicStockListForm, 'sell_price', actual_sell_price)
+
+        this.$delete(this.dynamicStockListForm, 'subtotal_price')
+        this.$set(this.dynamicStockListForm, 'subtotal_price', actual_subtotal_price)
+
+        this.temp_dividend_amount = dividend_amount
+      }
+    },
+
+    // 输入总价格和数量之后立马进行正确的金额计算（如果是股票的话，用下面的计算公式计算，如果是场内基金的话，买入卖出都是万1的费率）
+    // 股票：0.15‰佣金（我调到了万1.5）（最低5元）0.00015；0.02‰的过户费0.00002；1‰的印花税（卖出才有）0.001
+    calUnitPrice(element_obj) {
+      if (element_obj.product_type === '股票' && element_obj.quantity !== null && element_obj.quantity !== '' && element_obj.quantity !== undefined && element_obj.quantity !== 0) {
+        if (element_obj.transaction_type === '买入') {
+          // 获取没有算手续费的总价格
+          const subtotal_price = Number(parseFloat(element_obj.subtotal_price).toFixed(3))
+          const quantity = Number(element_obj.quantity)
+
+          // 计算实际的买入价格（需要加上手续费等等）
+          // 计算佣金费有没有超过5块
+          const commission = Number(parseFloat(subtotal_price * 0.00015).toFixed(3))
+          let actual_subtotal_price = 0.0 // 实际买入总价格
+          if (commission < 5) {
+            // (25500.00) + 5 + (25500.00 * 0.00002)
+            actual_subtotal_price = Number(parseFloat(subtotal_price + 5.0 + subtotal_price * 0.00002).toFixed(3))
+          } else {
+            actual_subtotal_price = Number(parseFloat(subtotal_price + commission + subtotal_price * 0.00002).toFixed(3))
+          }
+
+          // 实际买入单价
+          const actual_buy_price = Number(parseFloat(actual_subtotal_price / quantity).toFixed(3))
+
+          if (actual_subtotal_price >= 0) {
+            // 页面数据更新
             this.$delete(this.dynamicStockListForm, 'subtotal_price')
-            this.$set(this.dynamicStockListForm, 'subtotal_price', subtotal_price)
+            this.$set(this.dynamicStockListForm, 'subtotal_price', actual_subtotal_price)
+            // 实际的买入单价
+            this.$delete(this.dynamicStockListForm, 'buy_price')
+            this.$set(this.dynamicStockListForm, 'buy_price', actual_buy_price)
 
             // 卖出档位1、卖出档位2、加仓价格、重仓价格
-            const sell_gear_one_price = parseFloat(buy_price * 1.1).toFixed(2)
+            const sell_gear_one_price = Number(parseFloat(actual_buy_price * 1.1).toFixed(3))
             this.$delete(this.dynamicStockListForm, 'sell_gear_one')
             this.$set(this.dynamicStockListForm, 'sell_gear_one', sell_gear_one_price)
-            const sell_gear_two_price = parseFloat(buy_price * 1.2).toFixed(2)
+            const sell_gear_two_price = Number(parseFloat(actual_buy_price * 1.2).toFixed(3))
             this.$delete(this.dynamicStockListForm, 'sell_gear_two')
             this.$set(this.dynamicStockListForm, 'sell_gear_two', sell_gear_two_price)
-            const markup_price = parseFloat(buy_price * 0.9).toFixed(2)
+            const markup_price = Number(parseFloat(actual_buy_price * 0.9).toFixed(3))
             this.$delete(this.dynamicStockListForm, 'markup_price')
             this.$set(this.dynamicStockListForm, 'markup_price', markup_price)
-            const heavy_price = parseFloat(buy_price * 0.8).toFixed(2)
+            const heavy_price = Number(parseFloat(actual_buy_price * 0.8).toFixed(3))
             this.$delete(this.dynamicStockListForm, 'heavy_price')
             this.$set(this.dynamicStockListForm, 'heavy_price', heavy_price)
           } else {
@@ -514,13 +598,153 @@ export default {
             this.$delete(this.dynamicStockListForm, 'subtotal_price')
             this.$set(this.dynamicStockListForm, 'subtotal_price', undefined)
           }
+        } else {
+          // 卖出股票
+          // 获取没有算手续费的总价格
+          const subtotal_price = Number(parseFloat(element_obj.subtotal_price).toFixed(3))
+          const quantity = Number(element_obj.quantity)
+
+          // 计算实际的买入价格（需要加上手续费等等）
+          // 计算佣金费有没有超过5块
+          let commission = Number(parseFloat(subtotal_price * 0.00015).toFixed(3))
+
+          let actual_subtotal_price = 0.0 // 实际卖出总价格
+          if (commission < 5) {
+            // (15300) - 5 - (15300 * 0.00002) - (15300 * 0.001)
+            // 手续费
+            commission = Number(5.0)
+            // 印花税
+            const stamp_duty = Number(subtotal_price) * 0.001
+            // 过户费
+            const transfer_fee = Number(subtotal_price) * 0.00002
+            actual_subtotal_price = Number(parseFloat(subtotal_price - commission - transfer_fee - stamp_duty).toFixed(3))
+          } else {
+            // 印花税
+            const stamp_duty = Number(subtotal_price) * 0.001
+            // 过户费
+            const transfer_fee = Number(subtotal_price) * 0.00002
+            actual_subtotal_price = Number(parseFloat(subtotal_price - commission - transfer_fee - stamp_duty).toFixed(3))
+          }
+
+          // 实际卖出单价
+          const actual_sell_price = Number(parseFloat(actual_subtotal_price / quantity).toFixed(3))
+
+          if (actual_subtotal_price >= 0) {
+            // 页面更新数据，得先删除这个属性，再进行赋值
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', actual_subtotal_price)
+            // 实际的卖出单价
+            this.$delete(this.dynamicStockListForm, 'sell_price')
+            this.$set(this.dynamicStockListForm, 'sell_price', actual_sell_price)
+          } else {
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', undefined)
+          }
+        }
+      } else if (element_obj.product_type === '基金' && element_obj.quantity !== null && element_obj.quantity !== '' && element_obj.quantity !== undefined && element_obj.quantity !== 0) {
+        if (element_obj.transaction_type === '买入') {
+          // 获取没有算手续费的总价格
+          const subtotal_price = Number(parseFloat(element_obj.subtotal_price).toFixed(3))
+          const quantity = Number(element_obj.quantity)
+
+          // 计算实际的买入价格（需要加上手续费等等）
+          let actual_subtotal_price = 0.0 // 实际买入总价格
+          // 万一的手续费
+          actual_subtotal_price = Number(parseFloat(subtotal_price + subtotal_price * 0.0001).toFixed(3))
+
+          // 实际买入单价
+          const actual_buy_price = Number(parseFloat(actual_subtotal_price / quantity).toFixed(3))
+
+          if (actual_subtotal_price >= 0) {
+            // 页面更新数据，得先删除这个属性，再进行赋值
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', actual_subtotal_price)
+            // 实际的买入单价
+            this.$delete(this.dynamicStockListForm, 'buy_price')
+            this.$set(this.dynamicStockListForm, 'buy_price', actual_buy_price)
+
+            // 卖出档位1、卖出档位2、加仓价格、重仓价格
+            const sell_gear_one_price = Number(parseFloat(actual_buy_price * 1.1).toFixed(3))
+            this.$delete(this.dynamicStockListForm, 'sell_gear_one')
+            this.$set(this.dynamicStockListForm, 'sell_gear_one', sell_gear_one_price)
+            const sell_gear_two_price = Number(parseFloat(actual_buy_price * 1.2).toFixed(3))
+            this.$delete(this.dynamicStockListForm, 'sell_gear_two')
+            this.$set(this.dynamicStockListForm, 'sell_gear_two', sell_gear_two_price)
+            const markup_price = Number(parseFloat(actual_buy_price * 0.9).toFixed(3))
+            this.$delete(this.dynamicStockListForm, 'markup_price')
+            this.$set(this.dynamicStockListForm, 'markup_price', markup_price)
+            const heavy_price = Number(parseFloat(actual_buy_price * 0.8).toFixed(3))
+            this.$delete(this.dynamicStockListForm, 'heavy_price')
+            this.$set(this.dynamicStockListForm, 'heavy_price', heavy_price)
+          } else {
+            // 页面更新数据，得先删除这个属性，再进行赋值
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', undefined)
+          }
+        } else {
+          // 卖出股票
+          // 获取没有算手续费的总价格
+          const subtotal_price = Number(parseFloat(element_obj.subtotal_price).toFixed(3))
+          const quantity = Number(element_obj.quantity)
+
+          // 计算实际的买入价格（需要加上手续费等等）
+          let actual_subtotal_price = 0.0 // 实际卖出总价格
+          // 万1的手续费
+          actual_subtotal_price = Number(parseFloat(subtotal_price - subtotal_price * 0.0001).toFixed(3))
+
+          // 实际卖出单价
+          const actual_sell_price = Number(parseFloat(actual_subtotal_price / quantity).toFixed(3))
+
+          if (actual_subtotal_price >= 0) {
+            // 页面更新数据，得先删除这个属性，再进行赋值
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', actual_subtotal_price)
+            // 实际的卖出单价
+            this.$delete(this.dynamicStockListForm, 'sell_price')
+            this.$set(this.dynamicStockListForm, 'sell_price', actual_sell_price)
+          } else {
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', undefined)
+          }
+        }
+      }
+    },
+
+    // （用于内嵌的添加交易列表的表单价格计算）更改数量之后立马更新 行内的 小计金额 和 外面的总计金额 和 总计件数
+    calTotalChangePrice(element_obj) {
+      if (element_obj.transaction_type === '买入') {
+        const buy_price = Number(parseFloat(element_obj.buy_price).toFixed(3))
+
+        if (element_obj.quantity !== undefined) {
+          const subtotal_price = parseFloat(buy_price * Number(element_obj.quantity)).toFixed(3) // 买入的价格小计
+          if (subtotal_price >= 0) {
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', subtotal_price)
+
+            // 卖出档位1、卖出档位2、加仓价格、重仓价格
+            const sell_gear_one_price = Number(parseFloat(buy_price * 1.1).toFixed(3))
+            this.$delete(this.dynamicStockListForm, 'sell_gear_one')
+            this.$set(this.dynamicStockListForm, 'sell_gear_one', sell_gear_one_price)
+            const sell_gear_two_price = Number(parseFloat(buy_price * 1.2).toFixed(3))
+            this.$delete(this.dynamicStockListForm, 'sell_gear_two')
+            this.$set(this.dynamicStockListForm, 'sell_gear_two', sell_gear_two_price)
+            const markup_price = Number(parseFloat(buy_price * 0.9).toFixed(3))
+            this.$delete(this.dynamicStockListForm, 'markup_price')
+            this.$set(this.dynamicStockListForm, 'markup_price', markup_price)
+            const heavy_price = Number(parseFloat(buy_price * 0.8).toFixed(3))
+            this.$delete(this.dynamicStockListForm, 'heavy_price')
+            this.$set(this.dynamicStockListForm, 'heavy_price', heavy_price)
+          } else {
+            this.$delete(this.dynamicStockListForm, 'subtotal_price')
+            this.$set(this.dynamicStockListForm, 'subtotal_price', undefined)
+          }
         }
       } else {
-        const sell_price = parseFloat(element_obj.sell_price).toFixed(2)
+        const sell_price = Number(parseFloat(element_obj.sell_price).toFixed(3))
         if (element_obj.quantity !== undefined) {
-          const subtotal_price = parseFloat(sell_price * element_obj.quantity).toFixed(2) // 卖出的价格小计
+          const subtotal_price = parseFloat(sell_price * Number(element_obj.quantity)).toFixed(3) // 卖出的价格小计
           if (subtotal_price >= 0) {
-            // 页面更新数据，得先删除这个属性，再进行赋值
+            // 页面数据更新
             this.$delete(this.dynamicStockListForm, 'subtotal_price')
             this.$set(this.dynamicStockListForm, 'subtotal_price', subtotal_price)
           } else {
@@ -539,11 +763,12 @@ export default {
       this.detailsListLoading = false
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
-        this.$refs['dynamicStockListForm'].clearValidate()
       })
+      // 清空股票交易列表
+      this.saveStockTransaction = []
     },
 
-    // 更新入库单卡片数据 DONE
+    // 更新股票及其交易信息
     handleUpdate(domain, index) {
       this.dialogFormVisible = true
       this.dialogStatus = 'update'
@@ -579,7 +804,7 @@ export default {
       })
     },
 
-    // 点击查看详情 DONE
+    // 点击查看详情
     handleDetails(business_id) {
       this.dialogStatus = 'detail'
       this.viewDetail = true
@@ -598,7 +823,7 @@ export default {
       })
     },
 
-    // 点击删除按钮
+    // 点击删除股票卡片
     handleDelete(obj, index) {
       const business_id = obj.business_id
       const stock_name = obj.stock_name
@@ -612,7 +837,7 @@ export default {
           'stock_id': business_id
         }
         this.listLoading = true
-        // 根据 business_id 删除此条入库数据
+        // 根据 business_id 删除该条股票数据
         delStock(params).then((response) => {
           this.$notify({
             title: '删除股票：' + stock_name,
@@ -641,10 +866,7 @@ export default {
         type: 'warning'
       }).then(() => {
         // 根据index删除此条数据
-        this.savePurchaseProduct.splice(index, 1)
-
-        // 调用计算 总计金额 和 总计数量 的函数
-        this.calPiecePrice()
+        this.saveStockTransaction.splice(index, 1)
       }).catch(() => {
         this.$message({
           type: 'info',
@@ -653,7 +875,7 @@ export default {
       })
     },
 
-    // 添加产品到本次入库订单的产品列表
+    // 添加交易到该股票的交易信息列表
     addStockTransaction() {
       this.dynamicValidateForm.stock_transaction_list = []
       // 调用计算 总计金额 和 总计数量 的函数
@@ -671,7 +893,7 @@ export default {
           this.dynamicValidateForm.stock_transaction_list = this.saveStockTransaction
 
           this.listLoading = true
-          // 发送到后台，添加该次入库单
+          // 发送到后台，添加该股票及其交易信息
           addStockList(this.dynamicValidateForm).then((response) => {
             this.$notify({
               title: '新增股票交易列表',
@@ -693,17 +915,17 @@ export default {
       })
     },
 
-    // 更新入库数据
+    // 更新股票数据
     updateData() {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           this.listLoading = true
           this.dynamicValidateForm.stock_transaction_list = this.saveStockTransaction
 
-          // 发送到后台，添加该次出库单
+          // 更新股票及其交易信息
           updateStockList(this.dynamicValidateForm).then((response) => {
             this.$notify({
-              title: '更新入库单',
+              title: '更新股票及其交易信息',
               message: response.msg,
               type: 'success',
               duration: 2000
@@ -725,7 +947,6 @@ export default {
     // 获取股票交易列表卡片
     getData() {
       this.cardListLoading = true
-      // 发送到后台，添加该次入库单
       getStockList(this.listQuery).then((response) => {
         this.temp = response.data.data
         this.total = response.data.count
@@ -739,6 +960,14 @@ export default {
 </script>
 
 <style>
+  .el-table .warning-row {
+    background: oldlace;
+  }
+
+  .el-table .success-row {
+    background: #f0f9eb;
+  }
+
   .bottom {
     margin-top: 13px;
     line-height: 12px;

@@ -4,7 +4,7 @@
     <el-row v-if="checkPermission(['admin', 'data', 'test'])" :gutter="40" class="panel-group">
       <el-col v-loading="purchaseLoading" :xs="12" :sm="12" :lg="6" class="card-panel-col">
         <div>
-          <el-statistic group-separator="," :precision="2" decimal-separator="." :value="purchase_order_total_price" title="入库单总金额">
+          <el-statistic group-separator="," :precision="2" decimal-separator="." :value="total_profit_amount" title="盈利总金额">
             <template slot="prefix">
               <i class="el-icon-s-flag" style="color: red" />
             </template>
@@ -85,8 +85,8 @@
 </template>
 
 <script>
-// import { getTotalPurchasePriceAndPiece, getPurchasePriceStatistics, getPurchasePieceStatistics } from '@/api/purchase_order'
-// import { getTotalOutboundPriceAndPiece, getOutboundPriceStatistics, getOutboundPieceStatistics } from '@/api/outbound_order'
+import { getTotalPurchasePriceAndPiece } from '@/api/purchase_order'
+import { getTotalOutboundPriceAndPiece } from '@/api/outbound_order'
 import PanelGroup from './components/PanelGroup'
 import LineChart from './components/LineChart'
 import PieChart from './components/PieChart'
@@ -156,27 +156,27 @@ export default {
     checkPermission,
     // 获取入库单和出库单的总金额和总数量
     getTotalPurchaseOutbound() {
-      // this.purchaseLoading = true
-      // // 入库单总金额统计
-      // getTotalPurchasePriceAndPiece().then((response) => {
-      //   const data = response.data
-      //   this.purchase_order_total_price = data.total_price
-      //   this.purchase_order_total_piece = data.total_piece
-      //   this.purchaseLoading = false
-      // }).catch(() => {
-      //   this.purchaseLoading = false
-      // })
+      this.purchaseLoading = true
+      // 入库单总金额统计
+      getTotalPurchasePriceAndPiece().then((response) => {
+        const data = response.data
+        this.purchase_order_total_price = data.total_price
+        this.purchase_order_total_piece = data.total_piece
+        this.purchaseLoading = false
+      }).catch(() => {
+        this.purchaseLoading = false
+      })
 
-      // this.outboundLoading = true
-      // // 出库单总金额统计
-      // getTotalOutboundPriceAndPiece().then((response) => {
-      //   const data = response.data
-      //   this.outbound_order_total_price = data.total_price
-      //   this.outbound_order_total_piece = data.total_piece
-      //   this.outboundLoading = false
-      // }).catch(() => {
-      //   this.outboundLoading = false
-      // })
+      this.outboundLoading = true
+      // 出库单总金额统计
+      getTotalOutboundPriceAndPiece().then((response) => {
+        const data = response.data
+        this.outbound_order_total_price = data.total_price
+        this.outbound_order_total_piece = data.total_piece
+        this.outboundLoading = false
+      }).catch(() => {
+        this.outboundLoading = false
+      })
     },
 
     // 获取 4 个统计图的数据信息
