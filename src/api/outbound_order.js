@@ -2,7 +2,7 @@
  * @Author: xie.yx yxxie@gk-estor.com
  * @Date: 2022-12-05 21:09:43
  * @LastEditors: xie.yx yxxie@gk-estor.com
- * @LastEditTime: 2023-06-26 14:14:24
+ * @LastEditTime: 2023-08-14 15:55:51
  * @FilePath: /vue-admin-template/Users/popolun/test_folder/vue-element-admin/src/api/article.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -12,15 +12,6 @@ import request from '@/utils/request'
 export function getOutboundBarStatistics(query) {
   return request({
     url: '/order_statistics/get_outbound_bar_statistics',
-    method: 'get',
-    params: query
-  })
-}
-
-// 获取各个经销商出库总金额饼图信息
-export function getOutboundPieStatistics(query) {
-  return request({
-    url: '/order_statistics/get_outbound_pie_statistics',
     method: 'get',
     params: query
   })

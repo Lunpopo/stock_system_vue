@@ -2,7 +2,7 @@
  * @Author: xie.yx yxxie@gk-estor.com
  * @Date: 2023-02-28 17:17:55
  * @LastEditors: xie.yx yxxie@gk-estor.com
- * @LastEditTime: 2023-08-11 11:14:42
+ * @LastEditTime: 2023-08-14 15:05:10
  * @FilePath: /order_system_vue/src/api/purchase_order.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -61,6 +61,15 @@ export function delStock(data) {
     data
   })
 }
+
+// // 获取股票统计信息：股票盈利总金额、总交易次数、总买入额、总卖出额
+// export function getStockStatisticsInfo(query) {
+//   return request({
+//     url: '/order_statistics/get_stock_statistics_info',
+//     method: 'get',
+//     params: query
+//   })
+// }
 
 // 获取入库单金额统计信息
 export function getPurchasePriceStatistics(query) {

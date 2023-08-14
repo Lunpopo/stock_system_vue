@@ -2,7 +2,7 @@
  * @Author: xie.yx yxxie@gk-estor.com
  * @Date: 2022-12-05 21:09:43
  * @LastEditors: xie.yx yxxie@gk-estor.com
- * @LastEditTime: 2023-08-11 11:10:44
+ * @LastEditTime: 2023-08-14 11:30:25
  * @FilePath: /vue-element-admin/src/views/tab/order.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -70,13 +70,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="小计买入价格" prod="subtotal_price">
-          <template slot-scope="{row}">
-            <span>{{ row.subtotal_price }} </span>
-          </template>
-        </el-table-column>
-
-        <el-table-column label="小计卖出价格" prod="subtotal_price">
+        <el-table-column label="价格" prod="subtotal_price">
           <template slot-scope="{row}">
             <span>{{ row.subtotal_price }} </span>
           </template>
@@ -198,13 +192,7 @@
               </template>
             </el-table-column>
 
-            <el-table-column label="小计买入价格" prod="subtotal_price">
-              <template slot-scope="{row}">
-                <span>{{ row.subtotal_price }} </span>
-              </template>
-            </el-table-column>
-
-            <el-table-column label="小计卖出价格" prod="subtotal_price">
+            <el-table-column label="价格" prod="subtotal_price">
               <template slot-scope="{row}">
                 <span>{{ row.subtotal_price }} </span>
               </template>

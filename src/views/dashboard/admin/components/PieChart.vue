@@ -3,7 +3,7 @@
 </template>
 
 <script>
-// import { getOutboundPieStatistics } from '@/api/outbound_order'
+import { getProfitPieStatistics } from '@/api/stock_statistics'
 import echarts from 'echarts'
 require('echarts/theme/macarons') // echarts theme
 import resize from './mixins/resize'
@@ -21,23 +21,23 @@ export default {
     },
     height: {
       type: String,
-      default: '400px'
+      default: '500px'
     }
   },
 
   data() {
     return {
       listLoading: true,
-      // 经销商列表
-      dealer_names: [],
-      // 经销商数据列表，里面是字典
-      dealer_price_data: [],
+      // 股票名字列表
+      stock_names: [],
+      // 数据列表
+      profit_amount_data: [],
       chart: null
     }
   },
 
   created() {
-    this.get_outbound_pie_data()
+    this.get_pie_data()
   },
 
   beforeDestroy() {
@@ -49,28 +49,28 @@ export default {
   },
 
   methods: {
-    // 获取各个经销商出库金额的饼图统计信息
-    get_outbound_pie_data() {
+    // 获取各个股票盈利的饼图统计信息
+    get_pie_data() {
       this.listLoading = true
-      // getOutboundPieStatistics().then((response) => {
-      //   // 然后再给饼状图赋值
-      //   this.dealer_names = response.data.dealer_names
-      //   this.dealer_price_data = response.data.data_dict
+      getProfitPieStatistics().then((response) => {
+        // 然后再给饼状图赋值
+        this.stock_names = response.data.stock_names
+        this.profit_amount_data = response.data.data_dict
 
-      //   this.$nextTick(() => {
-      //     this.initChart()
-      //   })
-      //   this.listLoading = false
-      // }).catch(() => {
-      //   this.listLoading = false
-      // })
+        this.$nextTick(() => {
+          this.initChart()
+        })
+        this.listLoading = false
+      }).catch(() => {
+        this.listLoading = false
+      })
     },
 
     initChart() {
       this.chart = echarts.init(this.$el, 'macarons')
       this.chart.setOption({
         title: {
-          text: '前5名经销商进货额统计信息：',
+          text: '前10名股票盈利统计信息：',
           textStyle: {
             fontSize: 18,
             fontWeight: 'bolder'
@@ -83,17 +83,17 @@ export default {
         legend: {
           left: 'center',
           bottom: '10',
-          data: this.dealer_names
+          data: this.stock_names
         },
         series: [
           {
-            name: '前5名经销商进货额统计信息',
+            name: '前10名股票盈利统计信息',
             type: 'pie',
             roseType: 'radius',
             // radius: [15, 95],
             radius: [30, 130],
             // center: ['50%', '38%'],
-            data: this.dealer_price_data,
+            data: this.profit_amount_data,
             animationEasing: 'cubicInOut',
             animationDuration: 2600
           }
