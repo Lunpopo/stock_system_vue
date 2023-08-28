@@ -26,29 +26,17 @@
       <!-- 买入总金额 -->
       <el-col v-loading="stockInfoLoading" :xs="12" :sm="12" :lg="6" class="card-panel-col">
         <div>
-          <el-statistic group-separator="," :precision="2" decimal-separator="." :value="total_buy_amount" title="买入总金额">
-            <template slot="prefix">
-              <i class="el-icon-s-flag" style="color: red" />
-            </template>
-            <template slot="suffix">
-              <i class="el-icon-s-flag" style="color: blue" />
-            </template>
-          </el-statistic>
+          <el-statistic group-separator="," :precision="2" decimal-separator="." :value="total_buy_amount" title="买入总金额" />
         </div>
       </el-col>
 
       <!-- 卖出总金额 -->
       <el-col v-loading="stockInfoLoading" :xs="12" :sm="12" :lg="6" class="card-panel-col">
         <div>
-          <el-statistic :value="total_sell_amount" title="卖出总金额" />
+          <el-statistic :value="total_sell_amount" :precision="2" title="卖出总金额" />
         </div>
       </el-col>
     </el-row>
-
-    <!-- <panel-group v-if="checkPermission(['admin', 'data', 'test'])" @handleSetLineChartData="handleSetLineChartData" /> -->
-    <!-- <el-row v-if="checkPermission(['admin', 'data', 'test'])" v-loading="listLoading" style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
-      <line-chart :chart-data="lineChartData" />
-    </el-row> -->
 
     <el-row v-if="checkPermission(['admin', 'data', 'test'])" :gutter="32">
       <el-col :xs="24" :sm="24" :lg="24">

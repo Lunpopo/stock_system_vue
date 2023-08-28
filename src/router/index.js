@@ -258,6 +258,7 @@ export const constantRoutes = [
 const createRouter = () => new Router({
   // 配置路由和组件之间的应用关系
   // mode: 'history', // require service support
+  base: '/stock',
   scrollBehavior: () => ({ y: 0 }), // 切换路由的时候，内容都从顶上开始读
   routes: constantRoutes
 })

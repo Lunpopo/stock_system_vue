@@ -2,7 +2,7 @@
  * @Author: xie.yx yxxie@gk-estor.com
  * @Date: 2022-12-05 21:09:43
  * @LastEditors: xie.yx yxxie@gk-estor.com
- * @LastEditTime: 2023-08-14 11:30:25
+ * @LastEditTime: 2023-08-28 15:23:58
  * @FilePath: /vue-element-admin/src/views/tab/order.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -538,7 +538,7 @@ export default {
     },
 
     // 输入总价格和数量之后立马进行正确的金额计算（如果是股票的话，用下面的计算公式计算，如果是场内基金的话，买入卖出都是万1的费率）
-    // 股票：0.15‰佣金（我调到了万1.5）（最低5元）0.00015；0.02‰的过户费0.00002；1‰的印花税（卖出才有）0.001
+    // 股票：0.15‰佣金（我调到了万1.5）（最低5元）0.00015；0.02‰的过户费0.00002；1‰的印花税（卖出才有）0.0005
     calUnitPrice(element_obj) {
       if (element_obj.product_type === '股票' && element_obj.quantity !== null && element_obj.quantity !== '' && element_obj.quantity !== undefined && element_obj.quantity !== 0) {
         if (element_obj.transaction_type === '买入') {
@@ -598,17 +598,17 @@ export default {
 
           let actual_subtotal_price = 0.0 // 实际卖出总价格
           if (commission < 5) {
-            // (15300) - 5 - (15300 * 0.00002) - (15300 * 0.001)
+            // (15300) - 5 - (15300 * 0.00002) - (15300 * 0.0005)
             // 手续费
             commission = Number(5.0)
             // 印花税
-            const stamp_duty = Number(subtotal_price) * 0.001
+            const stamp_duty = Number(subtotal_price) * 0.0005
             // 过户费
             const transfer_fee = Number(subtotal_price) * 0.00002
             actual_subtotal_price = Number(parseFloat(subtotal_price - commission - transfer_fee - stamp_duty).toFixed(3))
           } else {
             // 印花税
-            const stamp_duty = Number(subtotal_price) * 0.001
+            const stamp_duty = Number(subtotal_price) * 0.0005
             // 过户费
             const transfer_fee = Number(subtotal_price) * 0.00002
             actual_subtotal_price = Number(parseFloat(subtotal_price - commission - transfer_fee - stamp_duty).toFixed(3))
@@ -728,6 +728,7 @@ export default {
           }
         }
       } else {
+        // 卖出
         const sell_price = Number(parseFloat(element_obj.sell_price).toFixed(3))
         if (element_obj.quantity !== undefined) {
           const subtotal_price = parseFloat(sell_price * Number(element_obj.quantity)).toFixed(3) // 卖出的价格小计
