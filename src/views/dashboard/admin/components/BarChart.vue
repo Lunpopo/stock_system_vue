@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import { getOutboundBarStatistics } from '@/api/outbound_order'
+// import { getOutboundBarStatistics } from '@/api/outbound_order'
 import echarts from 'echarts'
 require('echarts/theme/macarons') // echarts theme
 import resize from './mixins/resize'
@@ -49,32 +49,32 @@ export default {
   methods: {
     get_outbound_bar_statistics() {
       this.listLoading = true
-      getOutboundBarStatistics().then((response) => {
-        this.keys = response.data.keys
-        const values = response.data.values
+      // getOutboundBarStatistics().then((response) => {
+      //   this.keys = response.data.keys
+      //   const values = response.data.values
 
-        for (var dealer_name in values) {
-          const new_dict = {
-            'name': dealer_name,
-            'type': 'bar',
-            'stack': 'vistors',
-            // 'stack': dealer_name,
-            'barWidth': '60%',
-            'data': values[dealer_name],
-            'animationDuration': 6000
-          }
-          this.values.push(new_dict)
-        }
+      //   for (var dealer_name in values) {
+      //     const new_dict = {
+      //       'name': dealer_name,
+      //       'type': 'bar',
+      //       'stack': 'vistors',
+      //       // 'stack': dealer_name,
+      //       'barWidth': '60%',
+      //       'data': values[dealer_name],
+      //       'animationDuration': 6000
+      //     }
+      //     this.values.push(new_dict)
+      //   }
 
-        // 初始化展示柱状图
-        this.$nextTick(() => {
-          this.initChart()
-        })
+      //   // 初始化展示柱状图
+      //   this.$nextTick(() => {
+      //     this.initChart()
+      //   })
 
-        this.listLoading = false
-      }).catch(() => {
-        this.listLoading = false
-      })
+      //   this.listLoading = false
+      // }).catch(() => {
+      //   this.listLoading = false
+      // })
     },
 
     initChart() {
