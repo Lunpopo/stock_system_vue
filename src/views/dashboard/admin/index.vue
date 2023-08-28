@@ -26,14 +26,14 @@
       <!-- 买入总金额 -->
       <el-col v-loading="stockInfoLoading" :xs="12" :sm="12" :lg="6" class="card-panel-col">
         <div>
-          <el-statistic group-separator="," :precision="2" decimal-separator="." :value="total_buy_amount" title="买入总金额" />
+          <el-statistic group-separator="," :precision="3" decimal-separator="." :value="total_buy_amount" title="买入总金额" />
         </div>
       </el-col>
 
       <!-- 卖出总金额 -->
       <el-col v-loading="stockInfoLoading" :xs="12" :sm="12" :lg="6" class="card-panel-col">
         <div>
-          <el-statistic :value="total_sell_amount" :precision="2" title="卖出总金额" />
+          <el-statistic group-separator="," :precision="3" decimal-separator="." :value="total_sell_amount" title="卖出总金额" />
         </div>
       </el-col>
     </el-row>

@@ -2,7 +2,7 @@
  * @Author: xie.yx yxxie@gk-estor.com
  * @Date: 2022-12-05 21:09:43
  * @LastEditors: xie.yx yxxie@gk-estor.com
- * @LastEditTime: 2023-08-28 15:23:58
+ * @LastEditTime: 2023-08-28 15:46:34
  * @FilePath: /vue-element-admin/src/views/tab/order.vue
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -54,49 +54,49 @@
 
         <el-table-column label="买入价格" prod="buy_price">
           <template slot-scope="{row}">
-            <span>{{ row.buy_price }} </span>
+            <span>{{ row.buy_price }}</span>
           </template>
         </el-table-column>
 
         <el-table-column label="卖出价格" prod="sell_price">
           <template slot-scope="{row}">
-            <span>{{ row.sell_price }} </span>
+            <span>{{ row.sell_price }}</span>
           </template>
         </el-table-column>
 
         <el-table-column label="数量" prod="quantity">
           <template slot-scope="{row}">
-            <span>{{ row.quantity }} </span>
+            <span>{{ row.quantity }}</span>
           </template>
         </el-table-column>
 
         <el-table-column label="价格" prod="subtotal_price">
           <template slot-scope="{row}">
-            <span>{{ row.subtotal_price }} </span>
+            <span>{{ row.subtotal_price }}</span>
           </template>
         </el-table-column>
 
         <el-table-column label="卖出档位1" prod="sell_gear_one">
           <template slot-scope="{row}">
-            <span>{{ row.sell_gear_one }} </span>
+            <span>{{ row.sell_gear_one }}</span>
           </template>
         </el-table-column>
 
         <el-table-column label="卖出档位2" prod="sell_gear_two">
           <template slot-scope="{row}">
-            <span>{{ row.sell_gear_two }} </span>
+            <span>{{ row.sell_gear_two }}</span>
           </template>
         </el-table-column>
 
         <el-table-column label="加仓价格" prod="markup_price">
           <template slot-scope="{row}">
-            <span>{{ row.markup_price }} </span>
+            <span>{{ row.markup_price }}</span>
           </template>
         </el-table-column>
 
         <el-table-column label="重仓价格" prod="heavy_price">
           <template slot-scope="{row}">
-            <span>{{ row.heavy_price }} </span>
+            <span>{{ row.heavy_price }}</span>
           </template>
         </el-table-column>
 
@@ -108,32 +108,32 @@
 
         <el-table-column label="成本价" prod="cost">
           <template slot-scope="{row}">
-            <span>{{ row.cost }} </span>
+            <span><el-tag type="warning">{{ row.cost }}</el-tag></span>
           </template>
         </el-table-column>
 
         <el-table-column label="剩余仓位" prod="remain_positions">
           <template slot-scope="{row}">
-            <span>{{ row.remain_positions }} </span>
+            <span>{{ row.remain_positions }}</span>
           </template>
         </el-table-column>
 
         <el-table-column label="盈利数额" prod="profit_amount">
           <template slot-scope="{row}">
-            <span>{{ row.profit_amount }} </span>
+            <span>{{ row.profit_amount }}</span>
           </template>
         </el-table-column>
 
         <el-table-column label="分红" prod="dividend_amount">
           <template slot-scope="{row}">
-            <span>{{ row.dividend_amount }} </span>
+            <span>{{ row.dividend_amount }}</span>
           </template>
         </el-table-column>
 
         <el-table-column label="交易状态" prod="transaction_status">
           <template slot-scope="{row}">
-            <span v-if="row.transaction_status === '未清仓'"><el-tag> {{ row.transaction_status }} </el-tag></span>
-            <span v-if="row.transaction_status === '已清仓'"><el-tag type="success"> {{ row.transaction_status }} </el-tag></span>
+            <span v-if="row.transaction_status === '未清仓'"><el-tag>{{ row.transaction_status }}</el-tag></span>
+            <span v-if="row.transaction_status === '已清仓'"><el-tag type="success">{{ row.transaction_status }}</el-tag></span>
           </template>
         </el-table-column>
 
@@ -176,49 +176,49 @@
 
             <el-table-column label="买入价格" prod="buy_price">
               <template slot-scope="{row}">
-                <span>{{ row.buy_price }} </span>
+                <span>{{ row.buy_price }}</span>
               </template>
             </el-table-column>
 
             <el-table-column label="卖出价格" prod="sell_price">
               <template slot-scope="{row}">
-                <span>{{ row.sell_price }} </span>
+                <span>{{ row.sell_price }}</span>
               </template>
             </el-table-column>
 
             <el-table-column label="数量" prod="quantity">
               <template slot-scope="{row}">
-                <span>{{ row.quantity }} </span>
+                <span>{{ row.quantity }}</span>
               </template>
             </el-table-column>
 
             <el-table-column label="价格" prod="subtotal_price">
               <template slot-scope="{row}">
-                <span>{{ row.subtotal_price }} </span>
+                <span>{{ row.subtotal_price }}</span>
               </template>
             </el-table-column>
 
             <el-table-column label="卖出档位1" prod="sell_gear_one">
               <template slot-scope="{row}">
-                <span>{{ row.sell_gear_one }} </span>
+                <span>{{ row.sell_gear_one }}</span>
               </template>
             </el-table-column>
 
             <el-table-column label="卖出档位2" prod="sell_gear_two">
               <template slot-scope="{row}">
-                <span>{{ row.sell_gear_two }} </span>
+                <span>{{ row.sell_gear_two }}</span>
               </template>
             </el-table-column>
 
             <el-table-column label="加仓价格" prod="markup_price">
               <template slot-scope="{row}">
-                <span>{{ row.markup_price }} </span>
+                <span>{{ row.markup_price }}</span>
               </template>
             </el-table-column>
 
             <el-table-column label="重仓价格" prod="heavy_price">
               <template slot-scope="{row}">
-                <span>{{ row.heavy_price }} </span>
+                <span>{{ row.heavy_price }}</span>
               </template>
             </el-table-column>
 
